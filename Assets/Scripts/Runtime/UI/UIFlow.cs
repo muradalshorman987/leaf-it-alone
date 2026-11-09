@@ -25,7 +25,7 @@ namespace FallenYard.UI
         public static bool BlocksInput(GamePhase phase) => phase != GamePhase.Playing;
 
         /// <summary>True while the simulation should be frozen (Time.timeScale = 0).</summary>
-        public static bool FreezesTime(GamePhase phase) => phase == GamePhase.Paused || phase == GamePhase.TitleMenu;
+        public static bool FreezesTime(GamePhase phase) => phase == GamePhase.Paused || phase == GamePhase.TitleMenu || phase == GamePhase.YardMap;
 
         /// <summary>True while the mouse cursor should be free for clicking menus.</summary>
         public static bool ShowsCursor(GamePhase phase) => phase != GamePhase.Playing;
@@ -60,6 +60,7 @@ namespace FallenYard.UI
                 case GamePhase.Paused:
                 case GamePhase.Shop:
                 case GamePhase.YardComplete: return SetPhase(GamePhase.Playing);
+                case GamePhase.YardMap: return CloseYardMap();
                 default: return false;
             }
         }
@@ -85,6 +86,32 @@ namespace FallenYard.UI
         }
 
         public bool ReturnToTitle() => SetPhase(GamePhase.TitleMenu);
+
+        /// <summary>Where <see cref="CloseYardMap"/> goes back to.</summary>
+        public GamePhase YardMapReturnPhase { get; private set; } = GamePhase.TitleMenu;
+
+        /// <summary>Opens the Hollow Creek map from the title, play, pause or the yard-complete card.</summary>
+        public bool OpenYardMap()
+        {
+            switch (Phase)
+            {
+                case GamePhase.TitleMenu:
+                case GamePhase.Playing:
+                case GamePhase.Paused:
+                case GamePhase.YardComplete:
+                    YardMapReturnPhase = Phase;
+                    return SetPhase(GamePhase.YardMap);
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>Back button / Escape on the map: returns to wherever it was opened from.</summary>
+        public bool CloseYardMap()
+        {
+            if (Phase != GamePhase.YardMap) return false;
+            return SetPhase(YardMapReturnPhase);
+        }
 
         /// <summary>Shows the yard-complete card if the player is in the yard.</summary>
         public bool OnYardCompleted()
