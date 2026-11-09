@@ -3,7 +3,11 @@ using UnityEngine;
 
 namespace FallenYard.Player
 {
-    /// <summary>Simple CharacterController-based first-person walker with mouse look.</summary>
+    /// <summary>
+    /// CharacterController-based first-person walker with mouse look, optional
+    /// head bob and a sprint FOV kick. Settings (WP5) can drive
+    /// <see cref="headBobEnabled"/> and <see cref="baseFov"/> at runtime.
+    /// </summary>
     [RequireComponent(typeof(CharacterController))]
     public class FirstPersonController : MonoBehaviour
     {
@@ -20,11 +24,29 @@ namespace FallenYard.Player
         public float lookSensitivity = 2f;
         public float maxPitch = 85f;
 
+        [Header("Camera feel")]
+        [Tooltip("Gentle camera bob while walking. Off for motion-sensitive players.")]
+        public bool headBobEnabled = true;
+        [Tooltip("Bob depth in metres at full walking speed.")]
+        public float headBobAmount = 0.035f;
+        [Tooltip("Metres per footstep (longer = slower bob).")]
+        public float stepLength = 0.8f;
+        [Tooltip("Field of view in degrees while walking. 0 = keep the camera's own value.")]
+        public float baseFov = 0f;
+        [Tooltip("Extra FOV in degrees at full sprint.")]
+        public float sprintFovKick = 6f;
+        [Tooltip("How quickly FOV and bob settle (higher = snappier).")]
+        public float cameraSharpness = 8f;
+
         public float CurrentSpeed { get; private set; }
 
         CharacterController _cc;
+        Camera _cam;
+        Vector3 _pivotRestPos;
         float _pitch;
         float _verticalVelocity;
+        float _bobPhase;
+        float _bobIntensity;
 
         void Awake()
         {
@@ -34,6 +56,12 @@ namespace FallenYard.Player
                 var cam = GetComponentInChildren<Camera>();
                 if (cam != null) cameraPivot = cam.transform;
             }
+            if (cameraPivot != null)
+            {
+                _cam = cameraPivot.GetComponent<Camera>();
+                _pivotRestPos = cameraPivot.localPosition;
+            }
+            if (_cam != null && baseFov <= 0f) baseFov = _cam.fieldOfView;
         }
 
         void Start()
@@ -72,6 +100,24 @@ namespace FallenYard.Player
             _verticalVelocity += gravity * Time.deltaTime;
 
             _cc.Move((move + Vector3.up * _verticalVelocity) * Time.deltaTime);
+            UpdateCameraFeel(Time.deltaTime);
+        }
+
+        void UpdateCameraFeel(float dt)
+        {
+            if (cameraPivot == null) return;
+
+            bool grounded = _cc.isGrounded;
+            float targetBob = headBobEnabled && grounded ? Mathf.Clamp01(CurrentSpeed / Mathf.Max(0.1f, walkSpeed)) : 0f;
+            _bobIntensity = CameraFeel.Damp(_bobIntensity, targetBob, cameraSharpness, dt);
+            _bobPhase = CameraFeel.AdvancePhase(_bobPhase, CurrentSpeed, dt, stepLength);
+            cameraPivot.localPosition = _pivotRestPos + CameraFeel.BobOffset(_bobPhase, headBobAmount, _bobIntensity);
+
+            if (_cam != null && baseFov > 0f)
+            {
+                float target = CameraFeel.TargetFov(baseFov, sprintFovKick, CurrentSpeed, walkSpeed, sprintSpeed);
+                _cam.fieldOfView = CameraFeel.Damp(_cam.fieldOfView, target, cameraSharpness, dt);
+            }
         }
     }
 }

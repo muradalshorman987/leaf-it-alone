@@ -61,6 +61,10 @@ namespace FallenYard.EditorTools
             var canopy = MakeMaterial("Canopy", new Color(0.86f, 0.45f, 0.14f));
             var metal = MakeMaterial("ToolMetal", new Color(0.35f, 0.38f, 0.42f));
             var blowerBody = MakeMaterial("BlowerBody", new Color(0.20f, 0.45f, 0.62f));
+            var vacuumBody = MakeMaterial("VacuumBody", new Color(0.55f, 0.62f, 0.30f));
+            var mulcherBody = MakeMaterial("MulcherBody", new Color(0.70f, 0.22f, 0.16f));
+            var compost = MakeMaterial("Compost", new Color(0.28f, 0.19f, 0.11f));
+            var fertilizer = MakeMaterial("Fertilizer", new Color(0.55f, 0.78f, 0.30f));
             Material[] leafMats =
             {
                 MakeMaterial("Leaf_Orange", new Color(0.88f, 0.42f, 0.10f), true),
@@ -114,11 +118,15 @@ namespace FallenYard.EditorTools
                 L(180, 1.2f, 1.3f, 1.2f), L(400, 1.4f, 1.6f, 1.4f), L(800, 1.6f, 2f, 1.7f));
             var bagDef = MakeUpgrade("Upgrade_Bag", "bag", "Bigger Bags", true, 0,
                 L(80, capacity: 1.6f), L(220, capacity: 2.5f), L(500, capacity: 4f));
+            var vacuumDef = MakeUpgrade("Upgrade_Vacuum", "vacuum", "Leaf Vacuum", false, 450,
+                L(300, 1.2f, 1.3f, 1f, 1.5f), L(650, 1.4f, 1.6f, 1.1f, 2.2f), L(1200, 1.6f, 2f, 1.2f, 3f));
+            var mulcherDef = MakeUpgrade("Upgrade_Mulcher", "mulcher", "Mulcher", false, 900,
+                L(500, strength: 1.3f, capacity: 1.5f), L(1000, strength: 1.7f, capacity: 2.2f));
 
             // Managers
             var managers = new GameObject("Managers");
             managers.AddComponent<GameManager>();
-            managers.AddComponent<UpgradeManager>().definitions = new[] { rakeDef, blowerDef, bagDef };
+            managers.AddComponent<UpgradeManager>().definitions = new[] { rakeDef, blowerDef, vacuumDef, mulcherDef, bagDef };
             managers.AddComponent<PileDetector>();
             managers.AddComponent<YardProgress>();
             managers.AddComponent<SettingsManager>();
@@ -159,13 +167,34 @@ namespace FallenYard.EditorTools
             blower.baseRadius = 1f; blower.baseStrength = 22f; blower.baseRange = 5f;
             blower.viewModel = MakeBlowerModel(camGo.transform, blowerBody, metal);
 
+            var vacuum = player.AddComponent<LeafVacuum>();
+            vacuum.toolId = "vacuum"; vacuum.displayName = "Leaf Vacuum";
+            vacuum.baseRadius = 0.55f; vacuum.baseStrength = 1f; vacuum.baseRange = 2.2f;
+            vacuum.viewModel = MakeVacuumModel(camGo.transform, vacuumBody, metal);
+
+            var mulcher = player.AddComponent<Mulcher>();
+            mulcher.toolId = "mulcher"; mulcher.displayName = "Mulcher";
+            mulcher.baseRadius = 1f; mulcher.baseStrength = 1f; mulcher.baseRange = 3f;
+            mulcher.viewModel = MakeMulcherModel(camGo.transform, mulcherBody, metal);
+
+            Animate(rake, ToolViewModelAnimator.EffortStyle.Lean, fpc);
+            Animate(blower, ToolViewModelAnimator.EffortStyle.Buzz, fpc);
+            Animate(vacuum, ToolViewModelAnimator.EffortStyle.Buzz, fpc);
+            Animate(mulcher, ToolViewModelAnimator.EffortStyle.Shake, fpc);
+
             var tools = player.AddComponent<ToolController>();
             tools.playerCamera = cam;
             tools.tools.Add(rake);
             tools.tools.Add(blower);
+            tools.tools.Add(vacuum);
+            tools.tools.Add(mulcher);
+
+            MakeCompostBin(new Vector3(-YardSize / 2f + 2.5f, 0f, -YardSize / 2f + 2.5f), wood, compost, fertilizer);
 
             var bag = player.AddComponent<BagInteractor>();
             bag.playerCamera = cam;
+            bag.toolController = tools;
+            bag.vacuum = vacuum;
 
             hud.toolController = tools;
             hud.bagInteractor = bag;
@@ -306,6 +335,61 @@ namespace FallenYard.EditorTools
             Part(PrimitiveType.Cylinder, root.transform, new Vector3(0, -0.02f, 0.35f), new Vector3(90f, 0, 0), new Vector3(0.07f, 0.25f, 0.07f), metal);
             root.SetActive(false);
             return root;
+        }
+
+        static GameObject MakeVacuumModel(Transform cam, Material body, Material metal)
+        {
+            var root = new GameObject("VacuumViewModel");
+            root.transform.SetParent(cam, false);
+            root.transform.localPosition = new Vector3(0.32f, -0.4f, 0.5f);
+            Part(PrimitiveType.Cube, root.transform, Vector3.zero, Vector3.zero, new Vector3(0.2f, 0.22f, 0.28f), body);
+            Part(PrimitiveType.Cylinder, root.transform, new Vector3(0, -0.15f, 0.4f), new Vector3(60f, 0, 0), new Vector3(0.09f, 0.3f, 0.09f), metal);
+            Part(PrimitiveType.Sphere, root.transform, new Vector3(0.14f, 0.05f, -0.05f), Vector3.zero, new Vector3(0.16f, 0.2f, 0.2f), body);
+            root.SetActive(false);
+            return root;
+        }
+
+        static GameObject MakeMulcherModel(Transform cam, Material body, Material metal)
+        {
+            var root = new GameObject("MulcherViewModel");
+            root.transform.SetParent(cam, false);
+            root.transform.localPosition = new Vector3(0.3f, -0.45f, 0.65f);
+            Part(PrimitiveType.Cylinder, root.transform, Vector3.zero, Vector3.zero, new Vector3(0.25f, 0.12f, 0.25f), body);
+            Part(PrimitiveType.Cylinder, root.transform, new Vector3(0, 0.25f, -0.1f), new Vector3(-20f, 0, 0), new Vector3(0.03f, 0.25f, 0.03f), metal);
+            root.SetActive(false);
+            return root;
+        }
+
+        static void Animate(LeafTool tool, ToolViewModelAnimator.EffortStyle style, FirstPersonController player)
+        {
+            if (tool.viewModel == null) return;
+            var anim = tool.viewModel.AddComponent<ToolViewModelAnimator>();
+            anim.tool = tool;
+            anim.style = style;
+            anim.player = player;
+        }
+
+        static void MakeCompostBin(Vector3 pos, Material wood, Material compost, Material fertilizer)
+        {
+            var root = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            root.name = "CompostBin";
+            root.transform.position = pos + new Vector3(0f, 0.5f, 0f);
+            root.transform.localScale = new Vector3(1.4f, 1f, 1.4f);
+            root.GetComponent<Renderer>().sharedMaterial = wood;
+            var bin = root.AddComponent<CompostBin>();
+
+            // Fill: a dark slab on top that grows with the bin's fill (children are in the cube's local space).
+            var fillPivot = new GameObject("FillPivot").transform;
+            fillPivot.SetParent(root.transform, false);
+            fillPivot.localPosition = new Vector3(0f, 0.5f, 0f);
+            Part(PrimitiveType.Cube, fillPivot, new Vector3(0f, 0.25f, 0f), Vector3.zero, new Vector3(0.9f, 0.5f, 0.9f), compost);
+            fillPivot.localScale = new Vector3(1f, 0.3f, 1f);
+            bin.fillVisual = fillPivot;
+
+            var ready = Part(PrimitiveType.Sphere, root.transform, new Vector3(0f, 1.1f, 0f), Vector3.zero, new Vector3(0.3f, 0.3f, 0.3f), fertilizer);
+            ready.name = "FertilizerReady";
+            ready.SetActive(false);
+            bin.readyIndicator = ready;
         }
 
         static void EnsureFolder(string path)

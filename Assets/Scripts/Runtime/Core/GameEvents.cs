@@ -32,6 +32,12 @@ namespace FallenYard.Core
         /// <summary>Tool effort 0..1 for audio/VFX (blower throttle, rake drag). Raised by tools (WP3).</summary>
         public static event Action<float> ToolThrottle;
 
+        /// <summary>(fill of the next batch 0..1, fertilizer batches ready). Raised by the compost bin (WP3).</summary>
+        public static event Action<float, int> CompostChanged;
+
+        /// <summary>How restored the yard is, 0..1, after spreading fertilizer. Raised by the compost bin (WP3).</summary>
+        public static event Action<float> YardRestorationChanged;
+
         /// <summary>(world direction, strength). Raised by the wind system (WP2).</summary>
         public static event Action<Vector3, float> WindGust;
 
@@ -47,6 +53,8 @@ namespace FallenYard.Core
         public static void RaiseToolEquipped(string toolId) => ToolEquipped?.Invoke(toolId);
         public static void RaiseToolUpgraded(string toolId, int level) => ToolUpgraded?.Invoke(toolId, level);
         public static void RaiseToolThrottle(float throttle) => ToolThrottle?.Invoke(Mathf.Clamp01(throttle));
+        public static void RaiseCompostChanged(float fill, int readyBatches) => CompostChanged?.Invoke(Mathf.Clamp01(fill), Mathf.Max(0, readyBatches));
+        public static void RaiseYardRestorationChanged(float restoration) => YardRestorationChanged?.Invoke(Mathf.Clamp01(restoration));
         public static void RaiseWindGust(Vector3 direction, float strength) => WindGust?.Invoke(direction, strength);
         public static void RaiseYardCompleted(string yardId) => YardCompleted?.Invoke(yardId);
         public static void RaiseStateChanged(GamePhase phase) => StateChanged?.Invoke(phase);
@@ -65,6 +73,8 @@ namespace FallenYard.Core
             ToolEquipped = null;
             ToolUpgraded = null;
             ToolThrottle = null;
+            CompostChanged = null;
+            YardRestorationChanged = null;
             WindGust = null;
             YardCompleted = null;
             StateChanged = null;
