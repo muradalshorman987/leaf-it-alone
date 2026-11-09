@@ -30,6 +30,12 @@ Rake leaves into piles, bag them for coins, unlock a leaf blower and bigger bags
 | UI | `UI/UIManager.cs` | UI Toolkit HUD (coins, clean % bar with goal marker, tool, bag prompt, toasts), title and pause menus, **Tab** upgrade shop, yard-complete card. Owns the game phase (`UI/UIFlow.cs`) |
 | UI | `UI/Views/*`, `Assets/UI/Resources/FallenYardUI.uss` | Screens are built in code; all styling lives in one USS file |
 | UI | `UI/DebugHUD.cs` | Developer stats overlay, **F3** in the editor and development builds |
+| Input | `Core/KeyBindings.cs`, `Core/HoldToggle.cs` | Rebindable keys (stored in the settings file) and the hold-or-toggle option for sprint and tool use |
+| Tutorial | `Tutorial/TutorialDirector.cs`, `TutorialModel.cs`, `HintRules.cs` | Six-step first-yard tutorial driven by `GameEvents`, then contextual tips (afford an upgrade, idle piles, wind, new tool). Progress lives in the save (v4) |
+| Accessibility | `Accessibility/CaptionDirector.cs`, `CaptionCatalog.cs` | Sound captions: audio raises `GameEvents.RaiseSoundCue(id)`; wind, bagging, tool loops and chimes are captioned from gameplay events too |
+| Accessibility | `Accessibility/AccessibilityPalette.cs`, `PileHighlighter.cs` | Colour-blind palettes (Okabe-Ito) for pile rings and the HUD bar; the pile you can bag pulses so colour is never the only cue |
+| UI | `UI/OnboardingUI.cs`, `UI/Views/OptionsScreen.cs` | **Options** (pause and title menus): sensitivity, invert Y, hold-to-toggle, captions, colour-blind palette, pile rings, head bob, tutorial on/off/replay, key rebinding. Added at runtime by `Accessibility/OnboardingBootstrap.cs` |
+| Progress | `Progression/EconomyTable.cs`, `Editor/EconomyTableMenu.cs` | Economy tuning table: **Fallen Yard > Economy** exports every price and multiplier to CSV (with "leaves needed" per purchase) and imports it back |
 | Editor | `Editor/TestYardBuilder.cs` | Menu **Fallen Yard > Build Test Yard** generates materials, upgrade assets and a playable scene |
 
 ## Setup
@@ -55,6 +61,8 @@ Rake leaves into piles, bag them for coins, unlock a leaf blower and bigger bags
 | Tab | Upgrade shop (the Tool Shed) |
 | Esc | Pause menu / close whatever is open |
 | F3 | Developer stats overlay (editor and development builds) |
+
+Every key except Esc and F3 can be rebound in **Esc > Options > Keys**. Sprint and tool use can be set to press-to-toggle there too.
 
 ### The core loop
 
