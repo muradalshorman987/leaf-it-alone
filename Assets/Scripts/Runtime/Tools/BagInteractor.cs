@@ -84,6 +84,7 @@ namespace FallenYard.Tools
                 int bagged = leaves != null ? leaves.CollectInRadius(pile.center, pile.radius, Capacity) : 0;
                 if (bagged <= 0) return;
                 _payout.Pay(bagged, coinsPerLeaf);
+                GameEvents.RaiseLeavesBaggedAt(pile.center, bagged);
                 PileDetector.Instance.Scan();
                 return;
             }

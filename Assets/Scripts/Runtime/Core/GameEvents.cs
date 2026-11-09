@@ -47,6 +47,12 @@ namespace FallenYard.Core
         /// <summary>New high-level phase. Raised by whoever drives menus / flow (WP4).</summary>
         public static event Action<GamePhase> StateChanged;
 
+        /// <summary>(world position, leaves) where a pile was just bagged, for the bag poof. Raised by BagInteractor (WP3) next to PileBagged.</summary>
+        public static event Action<Vector3, int> LeavesBaggedAt;
+
+        /// <summary>Weather id now settling in ("clear", "breezy", "overcast", "blustery"). Raised by WeatherSystem (WP10).</summary>
+        public static event Action<string> WeatherChanged;
+
         public static void RaiseCoinsChanged(int total) => CoinsChanged?.Invoke(total);
         public static void RaiseYardCleanChanged(float fraction) => YardCleanChanged?.Invoke(Mathf.Clamp01(fraction));
         public static void RaisePileBagged(int leaves, int coinsEarned) => PileBagged?.Invoke(leaves, coinsEarned);
@@ -58,6 +64,8 @@ namespace FallenYard.Core
         public static void RaiseWindGust(Vector3 direction, float strength) => WindGust?.Invoke(direction, strength);
         public static void RaiseYardCompleted(string yardId) => YardCompleted?.Invoke(yardId);
         public static void RaiseStateChanged(GamePhase phase) => StateChanged?.Invoke(phase);
+        public static void RaiseLeavesBaggedAt(Vector3 position, int leaves) => LeavesBaggedAt?.Invoke(position, Mathf.Max(0, leaves));
+        public static void RaiseWeatherChanged(string weatherId) => WeatherChanged?.Invoke(weatherId);
 
         /// <summary>
         /// Drops every subscriber. Runs automatically before each play session so stale
@@ -78,6 +86,8 @@ namespace FallenYard.Core
             WindGust = null;
             YardCompleted = null;
             StateChanged = null;
+            LeavesBaggedAt = null;
+            WeatherChanged = null;
         }
     }
 }
