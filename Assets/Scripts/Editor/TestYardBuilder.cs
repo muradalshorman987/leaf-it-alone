@@ -111,6 +111,34 @@ namespace FallenYard.EditorTools
             field.leafCount = 12000;
             field.leafMaterials = leafMats;
 
+            BuildRig(new Vector3(0f, 0.05f, -YardSize / 2f + 2f), MakeYardUnlockTable(), wood, metal, blowerBody, vacuumBody, mulcherBody);
+            MakeCompostBin(new Vector3(-YardSize / 2f + 2.5f, 0f, -YardSize / 2f + 2.5f), wood, compost, fertilizer);
+
+            // Time of day, weather, particles and post-processing (WP10)
+            LightingSetup.AddRigToScene();
+
+            EditorSceneManager.SaveScene(scene, ScenePath);
+            AddSceneToBuild(ScenePath, first: false);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[FallenYard] Test yard built at " + ScenePath + ". Press Play!");
+        }
+
+        /// <summary>What <see cref="BuildRig"/> made.</summary>
+        internal struct Rig
+        {
+            public GameObject managers;
+            public GameObject player;
+            public Camera camera;
+        }
+
+        /// <summary>
+        /// Managers, UI, player, camera and tools: everything a playable yard needs apart from
+        /// the yard itself. Shared with the yard scene builder (YardSceneBuilder).
+        /// </summary>
+        internal static Rig BuildRig(Vector3 playerPosition, YardUnlockTable unlockTable,
+            Material wood, Material metal, Material blowerBody, Material vacuumBody, Material mulcherBody)
+        {
+            EnsureFolder(DataDir);
             // Upgrade data
             var rakeDef = MakeUpgrade("Upgrade_Rake", "rake", "Rake", true, 0,
                 L(60, 1.3f, 1.15f), L(150, 1.6f, 1.3f), L(350, 2.0f, 1.5f));
@@ -132,7 +160,7 @@ namespace FallenYard.EditorTools
             managers.AddComponent<YardProgress>();
             managers.AddComponent<SettingsManager>();
             managers.AddComponent<Autosaver>();
-            managers.AddComponent<MetaProgressionService>().unlockTable = MakeYardUnlockTable();
+            managers.AddComponent<MetaProgressionService>().unlockTable = unlockTable;
             var hud = managers.AddComponent<DebugHUD>();
 
             // UI Toolkit HUD, menus and shop (creates its own UIDocument + PanelSettings at runtime)
@@ -140,7 +168,7 @@ namespace FallenYard.EditorTools
 
             // Player
             var player = new GameObject("Player");
-            player.transform.position = new Vector3(0f, 0.05f, -YardSize / 2f + 2f);
+            player.transform.position = playerPosition;
             var cc = player.AddComponent<CharacterController>();
             cc.height = 1.8f;
             cc.radius = 0.35f;
@@ -190,8 +218,6 @@ namespace FallenYard.EditorTools
             tools.tools.Add(vacuum);
             tools.tools.Add(mulcher);
 
-            MakeCompostBin(new Vector3(-YardSize / 2f + 2.5f, 0f, -YardSize / 2f + 2.5f), wood, compost, fertilizer);
-
             var bag = player.AddComponent<BagInteractor>();
             bag.playerCamera = cam;
             bag.toolController = tools;
@@ -201,14 +227,17 @@ namespace FallenYard.EditorTools
             hud.bagInteractor = bag;
             hud.yardProgress = managers.GetComponent<YardProgress>();
 
-            // Time of day, weather, particles and post-processing (WP10)
-            LightingSetup.AddRigToScene();
+            return new Rig { managers = managers, player = player, camera = cam };
+        }
 
-            EditorSceneManager.SaveScene(scene, ScenePath);
-            var buildScenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
-            EditorBuildSettings.scenes = buildScenes;
-            AssetDatabase.SaveAssets();
-            Debug.Log("[FallenYard] Test yard built at " + ScenePath + ". Press Play!");
+        /// <summary>Adds a scene to Build Settings without dropping the others (the yard scenes live there too).</summary>
+        internal static void AddSceneToBuild(string path, bool first)
+        {
+            var list = new System.Collections.Generic.List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
+            list.RemoveAll(s => s.path == path);
+            var entry = new EditorBuildSettingsScene(path, true);
+            if (first) list.Insert(0, entry); else list.Add(entry);
+            EditorBuildSettings.scenes = list.ToArray();
         }
 
         // ------------------------------------------------------------------ helpers
@@ -256,7 +285,7 @@ namespace FallenYard.EditorTools
             return def;
         }
 
-        static Material MakeMaterial(string name, Color color, bool instanced = false)
+        internal static Material MakeMaterial(string name, Color color, bool instanced = false)
         {
             string path = $"{MatDir}/{name}.mat";
             var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
@@ -373,7 +402,7 @@ namespace FallenYard.EditorTools
             anim.player = player;
         }
 
-        static void MakeCompostBin(Vector3 pos, Material wood, Material compost, Material fertilizer)
+        internal static void MakeCompostBin(Vector3 pos, Material wood, Material compost, Material fertilizer)
         {
             var root = GameObject.CreatePrimitive(PrimitiveType.Cube);
             root.name = "CompostBin";
@@ -396,7 +425,7 @@ namespace FallenYard.EditorTools
             bin.readyIndicator = ready;
         }
 
-        static void EnsureFolder(string path)
+        internal static void EnsureFolder(string path)
         {
             if (AssetDatabase.IsValidFolder(path)) return;
             string parent = Path.GetDirectoryName(path)?.Replace('\\', '/');
