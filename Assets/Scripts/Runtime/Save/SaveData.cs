@@ -19,6 +19,14 @@ namespace FallenYard.Save
         public int timesCompleted;
         public float bestCleanFraction;
         public int coinsEarned;
+
+        // v3: compost bin state, so restoration and unspread fertilizer survive a reload.
+        /// <summary>How restored the yard is, 0..1 (the compost bin's YardRestorationChanged value).</summary>
+        public float restoration;
+        public int compostPendingLeaves;
+        public int compostReadyBatches;
+        public bool compostIsComposting;
+        public float compostProgress;
     }
 
     /// <summary>
@@ -33,8 +41,11 @@ namespace FallenYard.Save
     [Serializable]
     public class SaveData
     {
-        /// <summary>v1: coins, tools, completed yards. v2: yard unlocks, yard records, play time, timestamps.</summary>
-        public const int CurrentVersion = 2;
+        /// <summary>
+        /// v1: coins, tools, completed yards. v2: yard unlocks, yard records, play time, timestamps.
+        /// v3: per-yard restoration and compost bin state in <see cref="YardRecord"/>.
+        /// </summary>
+        public const int CurrentVersion = 3;
 
         public int version = CurrentVersion;
 

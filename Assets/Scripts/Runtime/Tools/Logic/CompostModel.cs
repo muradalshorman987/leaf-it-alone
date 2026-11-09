@@ -68,6 +68,20 @@ namespace FallenYard.Tools
             return true;
         }
 
+        /// <summary>
+        /// Puts the bin back the way a save file recorded it. Values are clamped, and a
+        /// bin that was composting resumes where it left off.
+        /// </summary>
+        public void RestoreState(float restoration, int pendingLeaves, int readyBatches, bool isComposting, float compostProgress)
+        {
+            Restoration = Mathf.Clamp01(restoration);
+            PendingLeaves = Mathf.Max(0, pendingLeaves);
+            ReadyBatches = Mathf.Max(0, readyBatches);
+            IsComposting = isComposting;
+            CompostProgress = isComposting ? Mathf.Clamp01(compostProgress) : 0f;
+            TryStartBatch();
+        }
+
         void TryStartBatch()
         {
             if (IsComposting || PendingLeaves < LeavesPerBatch) return;

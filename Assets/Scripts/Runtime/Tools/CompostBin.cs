@@ -99,6 +99,19 @@ namespace FallenYard.Tools
             return true;
         }
 
+        /// <summary>
+        /// Restores saved bin state (called by the save layer once the yard is known).
+        /// Updates the shader, raises YardRestorationChanged and refreshes visuals.
+        /// </summary>
+        public void ApplySavedState(float restoration, int pendingLeaves, int readyBatches, bool isComposting, float compostProgress)
+        {
+            Model.RestoreState(restoration, pendingLeaves, readyBatches, isComposting, compostProgress);
+            Shader.SetGlobalFloat(RestorationShaderId, Model.Restoration);
+            GameEvents.RaiseYardRestorationChanged(Model.Restoration);
+            _lastFill = -1f;
+            Publish();
+        }
+
         void Publish()
         {
             var m = Model;

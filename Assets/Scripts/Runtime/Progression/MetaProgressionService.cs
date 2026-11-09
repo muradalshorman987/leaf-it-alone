@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using FallenYard.Core;
 using FallenYard.Save;
+using FallenYard.Tools;
 using UnityEngine;
 
 namespace FallenYard.Progression
@@ -10,9 +11,12 @@ namespace FallenYard.Progression
     /// Connects <see cref="MetaProgression"/> to the running game: listens for yard
     /// completion and clean progress, unlocks yards and tool rewards, and exposes
     /// yard status for the yard select screen (WP4). Put one next to the GameManager.
+    ///
+    /// It also saves the scene's <see cref="CompostBin"/> (restoration, fertilizer,
+    /// pending leaves) into the current yard's record and puts it back on load.
     /// </summary>
     [DefaultExecutionOrder(-120)]
-    public class MetaProgressionService : MonoBehaviour
+    public class MetaProgressionService : MonoBehaviour, ISaveable
     {
         public static MetaProgressionService Instance { get; private set; }
 
@@ -55,6 +59,7 @@ namespace FallenYard.Progression
                 if (yard != null) currentYardId = yard.yardId;
             }
             Initialize();
+            RestoreCompost(Data);
         }
 
         void OnEnable()
@@ -62,6 +67,8 @@ namespace FallenYard.Progression
             GameEvents.YardCompleted += HandleYardCompleted;
             GameEvents.YardCleanChanged += HandleYardCleanChanged;
             GameEvents.CoinsChanged += HandleCoinsChanged;
+            GameEvents.YardRestorationChanged += HandleRestorationChanged;
+            SaveRegistry.Register(this);
         }
 
         void OnDisable()
@@ -69,6 +76,8 @@ namespace FallenYard.Progression
             GameEvents.YardCompleted -= HandleYardCompleted;
             GameEvents.YardCleanChanged -= HandleYardCleanChanged;
             GameEvents.CoinsChanged -= HandleCoinsChanged;
+            GameEvents.YardRestorationChanged -= HandleRestorationChanged;
+            SaveRegistry.Unregister(this);
         }
 
         /// <summary>Opens default and already-earned yards in the save. Called on Start; tests call it directly.</summary>
@@ -115,6 +124,41 @@ namespace FallenYard.Progression
             var data = Data;
             if (data != null && !string.IsNullOrEmpty(currentYardId))
                 MetaProgression.RecordProgress(data, currentYardId, fraction);
+        }
+
+        /// <summary>Saved restoration of a yard, 0..1.</summary>
+        public float GetRestoration(string yardId) => Data != null ? MetaProgression.GetRestoration(Data, yardId) : 0f;
+
+        void HandleRestorationChanged(float restoration)
+        {
+            var data = Data;
+            if (data != null) MetaProgression.RecordRestoration(data, currentYardId, restoration);
+        }
+
+        /// <summary>ISaveable: copies the compost bin into the current yard's record before each write.</summary>
+        public void CaptureState(SaveData data)
+        {
+            var bin = CompostBin.Instance;
+            if (data == null || bin == null || string.IsNullOrEmpty(currentYardId)) return;
+            var m = bin.Model;
+            var r = data.GetYardRecord(currentYardId, true);
+            r.restoration = m.Restoration;
+            r.compostPendingLeaves = m.PendingLeaves;
+            r.compostReadyBatches = m.ReadyBatches;
+            r.compostIsComposting = m.IsComposting;
+            r.compostProgress = m.CompostProgress;
+        }
+
+        /// <summary>ISaveable: puts the current yard's compost state back into the bin.</summary>
+        public void RestoreState(SaveData data) => RestoreCompost(data);
+
+        void RestoreCompost(SaveData data)
+        {
+            var bin = CompostBin.Instance;
+            if (data == null || bin == null || string.IsNullOrEmpty(currentYardId)) return;
+            var r = data.GetYardRecord(currentYardId, false);
+            if (r == null) return;
+            bin.ApplySavedState(r.restoration, r.compostPendingLeaves, r.compostReadyBatches, r.compostIsComposting, r.compostProgress);
         }
 
         void HandleCoinsChanged(int total)

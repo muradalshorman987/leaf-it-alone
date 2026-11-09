@@ -15,6 +15,7 @@ namespace FallenYard.Save
         {
             { 0, V0ToV1 },
             { 1, V1ToV2 },
+            { 2, V2ToV3 },
         };
 
         /// <summary>
@@ -73,6 +74,10 @@ namespace FallenYard.Save
                 r.timesCompleted = Mathf.Max(0, r.timesCompleted);
                 r.bestCleanFraction = float.IsNaN(r.bestCleanFraction) ? 0f : Mathf.Clamp01(r.bestCleanFraction);
                 r.coinsEarned = Mathf.Max(0, r.coinsEarned);
+                r.restoration = float.IsNaN(r.restoration) ? 0f : Mathf.Clamp01(r.restoration);
+                r.compostPendingLeaves = Mathf.Max(0, r.compostPendingLeaves);
+                r.compostReadyBatches = Mathf.Max(0, r.compostReadyBatches);
+                r.compostProgress = float.IsNaN(r.compostProgress) ? 0f : Mathf.Clamp01(r.compostProgress);
             }
 
             // A yard you've finished is always one you can play.
@@ -85,6 +90,14 @@ namespace FallenYard.Save
         {
             d.tools ??= new List<ToolSaveEntry>();
             d.completedYards ??= new List<string>();
+        }
+
+        /// <summary>
+        /// v3 adds restoration and compost state to yard records. Older saves never had a
+        /// compost bin, so the defaults (0, empty bin) are right and there is nothing to convert.
+        /// </summary>
+        static void V2ToV3(SaveData d)
+        {
         }
 
         /// <summary>v2 adds yard unlocks and per-yard records. Seed them from the completed list.</summary>

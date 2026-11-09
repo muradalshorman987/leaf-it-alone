@@ -167,6 +167,17 @@ namespace FallenYard.Progression
             return list;
         }
 
+        /// <summary>Stores the yard's restoration (0..1) from the compost bin.</summary>
+        public static void RecordRestoration(SaveData data, string yardId, float restoration)
+        {
+            if (string.IsNullOrEmpty(yardId)) return;
+            data.GetYardRecord(yardId, true).restoration = float.IsNaN(restoration) ? 0f : Mathf.Clamp01(restoration);
+        }
+
+        /// <summary>Saved restoration for a yard, 0 if it was never played.</summary>
+        public static float GetRestoration(SaveData data, string yardId) =>
+            data.GetYardRecord(yardId, false)?.restoration ?? 0f;
+
         /// <summary>0..1 share of the table's yards completed, for a "town restored" meter.</summary>
         public static float OverallCompletion(SaveData data, YardUnlockTable table)
         {
