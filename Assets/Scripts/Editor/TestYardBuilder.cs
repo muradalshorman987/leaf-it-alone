@@ -121,6 +121,9 @@ namespace FallenYard.EditorTools
             managers.AddComponent<YardProgress>();
             var hud = managers.AddComponent<DebugHUD>();
 
+            // UI Toolkit HUD, menus and shop (creates its own UIDocument + PanelSettings at runtime)
+            new GameObject("UI").AddComponent<UIManager>();
+
             // Player
             var player = new GameObject("Player");
             player.transform.position = new Vector3(0f, 0.05f, -YardSize / 2f + 2f);
