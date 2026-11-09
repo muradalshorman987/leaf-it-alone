@@ -30,6 +30,7 @@ namespace FallenYard.Tools
             Current?.OnUnequip();
             _index = index;
             Current.OnEquip();
+            GameEvents.RaiseToolEquipped(Current.toolId);
         }
 
         void Update()

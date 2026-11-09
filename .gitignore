@@ -8,15 +8,35 @@
 /[Uu]ser[Ss]ettings/
 /[Mm]emoryCaptures/
 /[Rr]ecordings/
+/[Aa]ssets/[Aa]ssetStoreTools*
+/[Aa]ssets/[Ss]treamingAssets/aa/*
+/[Aa]ssets/Plugins/Editor/JetBrains*
+/CodeCoverage/
+/ProjectSettings/Packages/com.unity.probuilder/
+sysinfo.txt
+crashlytics-build.properties
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+
+# GameCI / test output
+/artifacts/
+/[Tt]est[Rr]esults*.xml
+/build/
 
 # IDE
 .vs/
 .vscode/
 .idea/
+.consulo/
 *.csproj
+*.unityproj
 *.sln
+*.slnx
 *.suo
+*.tmp
 *.user
+*.userprefs
 *.pidb
 *.booproj
 *.svd
@@ -24,13 +44,18 @@
 *.mdb
 *.opendb
 *.VC.db
+ExportedObj/
+
+# Blender backups
+*.blend1
+*.blend2
 
 # OS
 .DS_Store
 Thumbs.db
+Desktop.ini
 
 # Builds
 *.apk
 *.aab
-*.unitypackage
 *.app

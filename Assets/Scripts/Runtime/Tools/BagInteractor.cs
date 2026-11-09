@@ -55,6 +55,7 @@ namespace FallenYard.Tools
                 GameManager.Instance.AddCoins(whole);
                 GameManager.Instance.RecordLeavesBagged(bagged);
             }
+            GameEvents.RaisePileBagged(bagged, whole);
             PileDetector.Instance.Scan();
         }
     }

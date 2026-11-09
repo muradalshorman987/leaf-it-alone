@@ -50,6 +50,13 @@ Rake leaves into piles, bag them for coins, unlock a leaf blower and bigger bags
 
 Rake leaves toward one spot until a pile forms (the HUD pile count goes up), look at it and press **E**. Coins buy rake upgrades, bigger bags, and the leaf blower. Bag 95% of the yard for a completion bonus.
 
+## Tests, CI and shared events
+
+- Tests: *Window > General > Test Runner* (EditMode and PlayMode). They live in `Assets/Tests/`.
+- CI: GitHub Actions with GameCI runs the tests on every PR and builds Windows on `main`. It needs three repo secrets once; see [.github/CI.md](.github/CI.md).
+- Systems talk through `Core/GameEvents.cs` (coins, piles bagged, tool equipped/upgraded, yard clean %, yard completed, wind, game phase) instead of referencing each other.
+- Art and audio go through Git LFS: run `git lfs install` once.
+
 ## Optional: let Claude drive the editor (MCP for Unity)
 
 1. In Unity: **Window > Package Manager > + > Add package from git URL…** and paste

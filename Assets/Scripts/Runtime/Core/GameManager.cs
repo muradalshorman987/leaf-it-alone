@@ -64,6 +64,7 @@ namespace FallenYard.Core
             if (amount == 0) return;
             Data.coins = Mathf.Max(0, Data.coins + amount);
             OnCoinsChanged?.Invoke(Data.coins);
+            GameEvents.RaiseCoinsChanged(Data.coins);
         }
 
         public bool TrySpend(int amount)
@@ -71,6 +72,7 @@ namespace FallenYard.Core
             if (amount < 0 || Data.coins < amount) return false;
             Data.coins -= amount;
             OnCoinsChanged?.Invoke(Data.coins);
+            GameEvents.RaiseCoinsChanged(Data.coins);
             return true;
         }
 
@@ -84,6 +86,7 @@ namespace FallenYard.Core
             Data.completedYards.Add(yardId);
             Save();
             OnYardCompleted?.Invoke(yardId);
+            GameEvents.RaiseYardCompleted(yardId);
         }
 
         [ContextMenu("Delete Save File")]
@@ -92,6 +95,7 @@ namespace FallenYard.Core
             SaveSystem.Delete();
             Data = new SaveData();
             OnCoinsChanged?.Invoke(Data.coins);
+            GameEvents.RaiseCoinsChanged(Data.coins);
         }
     }
 }
