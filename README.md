@@ -21,7 +21,9 @@ Rake leaves into piles, bag them for coins, unlock a leaf blower and bigger bags
 | Progress | `Progression/UpgradeManager.cs` + `ToolUpgradeDefinition.cs` | Upgrade hooks: tools read radius/strength/range/capacity multipliers per level |
 | Progress | `Progression/YardProgress.cs` | Clean percentage, completion bonus at 95% |
 | Save | `Save/SaveSystem.cs`, `SaveData.cs` | Atomic JSON save in `Application.persistentDataPath` (coins, tool levels, finished yards) |
-| UI | `UI/DebugHUD.cs` | Zero-setup HUD + **Tab** upgrade shop (IMGUI placeholder) |
+| UI | `UI/UIManager.cs` | UI Toolkit HUD (coins, clean % bar with goal marker, tool, bag prompt, toasts), title and pause menus, **Tab** upgrade shop, yard-complete card. Owns the game phase (`UI/UIFlow.cs`) |
+| UI | `UI/Views/*`, `Assets/UI/Resources/FallenYardUI.uss` | Screens are built in code; all styling lives in one USS file |
+| UI | `UI/DebugHUD.cs` | Developer stats overlay, **F3** in the editor and development builds |
 | Editor | `Editor/TestYardBuilder.cs` | Menu **Fallen Yard > Build Test Yard** generates materials, upgrade assets and a playable scene |
 
 ## Setup
@@ -44,11 +46,13 @@ Rake leaves into piles, bag them for coins, unlock a leaf blower and bigger bags
 | Left mouse (hold) | Use tool |
 | 1 / 2 | Rake / Leaf Blower (unlock the blower in the shop) |
 | E | Bag the pile you're looking at |
-| Tab | Upgrade shop |
+| Tab | Upgrade shop (the Tool Shed) |
+| Esc | Pause menu / close whatever is open |
+| F3 | Developer stats overlay (editor and development builds) |
 
 ### The core loop
 
-Rake leaves toward one spot until a pile forms (the HUD pile count goes up), look at it and press **E**. Coins buy rake upgrades, bigger bags, and the leaf blower. Bag 95% of the yard for a completion bonus.
+Rake leaves toward one spot until a pile forms (press **F3** to see the pile count), look at it and press **E**. Coins buy rake upgrades, bigger bags, and the leaf blower. Bag 95% of the yard for a completion bonus.
 
 ## Tests, CI and shared events
 
@@ -81,5 +85,5 @@ Rake leaves toward one spot until a pile forms (the HUD pile count goes up), loo
 ## Roadmap
 
 - Blender low-poly assets: leaf variants, rake, blower, bags, house, fences, trees
-- Real HUD (UI Toolkit), audio (rustle, blower hum), wind gusts that re-scatter leaves
+- Settings and yard-select screens, audio (rustle, blower hum), wind gusts that re-scatter leaves
 - Multiple yards with seasonal palettes, leaf vacuum, mulcher

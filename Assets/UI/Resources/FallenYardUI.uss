@@ -1,0 +1,329 @@
+/*
+ * Fallen Yard UI. Warm autumn palette, rounded cream cards, chunky readable type.
+ * All screens are built in code (Runtime/UI/Views); class names use the fy- prefix.
+ */
+
+.fy-root {
+    --fy-ink: #3B2A1E;
+    --fy-ink-soft: #6E5843;
+    --fy-cream: rgba(255, 246, 230, 0.94);
+    --fy-cream-solid: #FFF6E6;
+    --fy-sand: #F3E2C4;
+    --fy-sand-hover: #F7D7A6;
+    --fy-pumpkin: #D9792B;
+    --fy-pumpkin-hover: #E88B3D;
+    --fy-moss: #7BA65A;
+    --fy-gold: #E8B23A;
+    --fy-gold-edge: #B07A1E;
+    --fy-shade: rgba(30, 20, 12, 0.55);
+
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+    color: var(--fy-ink);
+    font-size: 22px;
+}
+
+/* ---------- shared ---------- */
+
+.fy-panel {
+    background-color: var(--fy-cream);
+    border-radius: 16px;
+    border-width: 2px;
+    border-color: rgba(59, 42, 30, 0.15);
+    padding: 14px 18px;
+}
+
+.fy-coin-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 12px;
+    background-color: var(--fy-gold);
+    border-width: 3px;
+    border-color: var(--fy-gold-edge);
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
+.fy-button {
+    background-color: var(--fy-sand);
+    color: var(--fy-ink);
+    border-width: 0;
+    border-radius: 12px;
+    padding: 10px 22px;
+    margin: 6px 0;
+    font-size: 24px;
+    -unity-font-style: bold;
+    transition-property: background-color, scale;
+    transition-duration: 0.12s;
+}
+
+.fy-button:hover {
+    background-color: var(--fy-sand-hover);
+    scale: 1.03 1.03;
+}
+
+.fy-button:focus {
+    border-width: 3px;
+    border-color: var(--fy-pumpkin);
+}
+
+.fy-button:active {
+    scale: 0.98 0.98;
+}
+
+.fy-button--primary {
+    background-color: var(--fy-pumpkin);
+    color: var(--fy-cream-solid);
+}
+
+.fy-button--primary:hover {
+    background-color: var(--fy-pumpkin-hover);
+}
+
+.fy-button:disabled {
+    opacity: 0.5;
+    scale: 1 1;
+}
+
+.fy-button--short {
+    color: #8C4B2E;
+}
+
+.fy-button--maxed {
+    background-color: var(--fy-moss);
+    color: var(--fy-cream-solid);
+}
+
+/* ---------- HUD ---------- */
+
+.fy-hud {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+}
+
+.fy-hud__stats {
+    position: absolute;
+    left: 24px;
+    top: 24px;
+    min-width: 300px;
+}
+
+.fy-hud__row {
+    flex-direction: row;
+    align-items: center;
+    margin: 2px 0;
+}
+
+.fy-hud__coins {
+    font-size: 30px;
+    -unity-font-style: bold;
+}
+
+.fy-hud__caption {
+    font-size: 18px;
+    color: var(--fy-ink-soft);
+    width: 52px;
+}
+
+.fy-hud__clean {
+    font-size: 22px;
+    -unity-font-style: bold;
+    margin-left: 10px;
+    min-width: 64px;
+}
+
+.fy-hud__tool {
+    font-size: 18px;
+    color: var(--fy-ink-soft);
+    margin-top: 4px;
+}
+
+.fy-bar {
+    width: 180px;
+    height: 14px;
+    border-radius: 7px;
+    background-color: rgba(59, 42, 30, 0.18);
+    overflow: visible;
+}
+
+.fy-bar__fill {
+    height: 100%;
+    width: 0;
+    border-radius: 7px;
+    background-color: var(--fy-pumpkin);
+    transition-property: width, background-color;
+    transition-duration: 0.25s;
+}
+
+.fy-bar__fill--done {
+    background-color: var(--fy-moss);
+}
+
+.fy-bar__goal {
+    position: absolute;
+    top: -4px;
+    width: 3px;
+    height: 22px;
+    margin-left: -1px;
+    background-color: var(--fy-ink);
+    border-radius: 1px;
+}
+
+.fy-crosshair {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    margin-left: -4px;
+    margin-top: -4px;
+    border-radius: 4px;
+    background-color: rgba(255, 246, 230, 0.9);
+    border-width: 1px;
+    border-color: rgba(59, 42, 30, 0.6);
+}
+
+.fy-hud__prompt {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 56%;
+    -unity-text-align: middle-center;
+    font-size: 26px;
+    -unity-font-style: bold;
+    color: var(--fy-cream-solid);
+    -unity-text-outline-width: 1px;
+    -unity-text-outline-color: rgba(30, 20, 12, 0.9);
+    text-shadow: 1px 2px 3px rgba(0, 0, 0, 0.6);
+}
+
+.fy-hud__hint {
+    position: absolute;
+    left: 24px;
+    bottom: 20px;
+    font-size: 16px;
+    color: var(--fy-cream-solid);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+/* ---------- toasts ---------- */
+
+.fy-toasts {
+    position: absolute;
+    right: 24px;
+    top: 24px;
+    align-items: flex-end;
+}
+
+.fy-toast {
+    font-size: 20px;
+    padding: 8px 16px;
+    margin-bottom: 8px;
+    border-radius: 12px;
+}
+
+/* ---------- overlays and menus ---------- */
+
+.fy-overlay {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+    background-color: var(--fy-shade);
+    justify-content: center;
+    align-items: center;
+}
+
+.fy-overlay--soft {
+    background-color: rgba(30, 20, 12, 0.3);
+}
+
+.fy-overlay--title {
+    background-color: rgba(58, 30, 14, 0.82);
+}
+
+.fy-menu {
+    min-width: 420px;
+    padding: 28px 36px;
+    align-items: stretch;
+}
+
+.fy-menu__title {
+    font-size: 48px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    color: var(--fy-ink);
+}
+
+.fy-overlay--title .fy-menu__title {
+    font-size: 72px;
+    color: var(--fy-pumpkin);
+}
+
+.fy-menu__subtitle {
+    font-size: 20px;
+    color: var(--fy-ink-soft);
+    -unity-text-align: middle-center;
+    white-space: normal;
+    margin-bottom: 18px;
+}
+
+.fy-menu__buttons {
+    align-items: stretch;
+}
+
+/* ---------- shop ---------- */
+
+.fy-shop {
+    width: 760px;
+    max-height: 80%;
+    padding: 24px 28px;
+}
+
+.fy-shop__header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.fy-shop__list {
+    flex-grow: 1;
+    flex-shrink: 1;
+    margin-bottom: 12px;
+}
+
+.fy-shop__row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    border-radius: 12px;
+    background-color: rgba(243, 226, 196, 0.6);
+}
+
+.fy-shop__info {
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+.fy-shop__name {
+    font-size: 26px;
+    -unity-font-style: bold;
+}
+
+.fy-shop__level {
+    font-size: 18px;
+    color: var(--fy-ink-soft);
+    margin-left: 12px;
+}
+
+.fy-shop__effect {
+    font-size: 18px;
+    color: var(--fy-ink-soft);
+    white-space: normal;
+}
+
+.fy-shop__buy {
+    min-width: 200px;
+    margin: 0 0 0 16px;
+}
