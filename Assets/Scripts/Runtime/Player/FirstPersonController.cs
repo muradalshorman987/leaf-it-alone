@@ -1,12 +1,13 @@
 using FallenYard.Core;
+using FallenYard.Settings;
 using UnityEngine;
 
 namespace FallenYard.Player
 {
     /// <summary>
     /// CharacterController-based first-person walker with mouse look, optional
-    /// head bob and a sprint FOV kick. Settings (WP5) can drive
-    /// <see cref="headBobEnabled"/> and <see cref="baseFov"/> at runtime.
+    /// head bob and a sprint FOV kick. Sensitivity, invert Y, FOV and head bob
+    /// follow <see cref="SettingsManager"/> when one is in the scene.
     /// </summary>
     [RequireComponent(typeof(CharacterController))]
     public class FirstPersonController : MonoBehaviour
@@ -23,6 +24,8 @@ namespace FallenYard.Player
         [Header("Look")]
         public float lookSensitivity = 2f;
         public float maxPitch = 85f;
+        [Tooltip("Flip vertical mouse look.")]
+        public bool invertY;
 
         [Header("Camera feel")]
         [Tooltip("Gentle camera bob while walking. Off for motion-sensitive players.")]
@@ -64,11 +67,26 @@ namespace FallenYard.Player
             if (_cam != null && baseFov <= 0f) baseFov = _cam.fieldOfView;
         }
 
+        void OnEnable() => SettingsManager.Changed += ApplySettings;
+        void OnDisable() => SettingsManager.Changed -= ApplySettings;
+
         void Start()
         {
-            if (GameManager.Instance != null)
+            if (SettingsManager.Instance != null && SettingsManager.Instance.Current != null)
+                ApplySettings(SettingsManager.Instance.Current);
+            else if (GameManager.Instance != null)
                 lookSensitivity = GameManager.Instance.Data.mouseSensitivity;
             SetCursorLocked(true);
+        }
+
+        /// <summary>Takes sensitivity, invert Y, FOV and head bob from the player's settings.</summary>
+        public void ApplySettings(GameSettings s)
+        {
+            if (s == null) return;
+            lookSensitivity = s.mouseSensitivity;
+            invertY = s.invertY;
+            headBobEnabled = s.headBob;
+            if (s.fieldOfView > 0f) baseFov = s.fieldOfView;
         }
 
         public static void SetCursorLocked(bool locked)
@@ -85,7 +103,7 @@ namespace FallenYard.Player
             {
                 Vector2 look = GameInput.Look * lookSensitivity;
                 transform.Rotate(0f, look.x, 0f, Space.Self);
-                _pitch = Mathf.Clamp(_pitch - look.y, -maxPitch, maxPitch);
+                _pitch = Mathf.Clamp(_pitch + (invertY ? look.y : -look.y), -maxPitch, maxPitch);
                 cameraPivot.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
             }
 
