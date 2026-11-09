@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using FallenYard.Core;
 using FallenYard.Levels;
 using FallenYard.Progression;
@@ -46,6 +48,15 @@ namespace FallenYard.UI
         public Button NextYardButton { get; private set; }
         public ToastQueue Toasts { get; private set; }
         public ToastView ToastView { get; private set; }
+
+        /// <summary>Root of the UI document, once built. Other packages add their own views here.</summary>
+        public VisualElement Root => _root;
+        public bool IsBuilt => _built;
+
+        /// <summary>Raised once every screen exists, so other packages can add buttons and views.</summary>
+        public event Action Built;
+
+        readonly List<IUIModal> _modals = new List<IUIModal>();
 
         UIDocument _document;
         VisualElement _root;
@@ -112,7 +123,13 @@ namespace FallenYard.UI
         {
             if (!_built) return;
 
-            if (UIInput.PausePressed) Flow.TogglePause();
+            var modal = TopModal();
+            if (modal != null)
+            {
+                // An extra screen (options, rebinding) is on top: Escape closes it, Tab does nothing.
+                if (UIInput.PausePressed) modal.HandleBack();
+            }
+            else if (UIInput.PausePressed) Flow.TogglePause();
             else if (GameInput.MenuPressed) Flow.ToggleShop();
 
             Hud.SetPrompt(Flow.Phase == GamePhase.Playing && _bag != null ? _bag.Prompt : "");
@@ -231,6 +248,25 @@ namespace FallenYard.UI
             UIViewUtil.SetVisible(titleMap, hasYards);
 
             _built = true;
+            Built?.Invoke();
+        }
+
+        // ---------------------------------------------------------------- modals
+
+        /// <summary>Registers a screen that sits on top of the menus and takes Escape while open.</summary>
+        public void RegisterModal(IUIModal modal)
+        {
+            if (modal != null && !_modals.Contains(modal)) _modals.Add(modal);
+        }
+
+        public void UnregisterModal(IUIModal modal) => _modals.Remove(modal);
+
+        /// <summary>The most recently registered open modal, or null.</summary>
+        public IUIModal TopModal()
+        {
+            for (int i = _modals.Count - 1; i >= 0; i--)
+                if (_modals[i] != null && _modals[i].IsOpen) return _modals[i];
+            return null;
         }
 
         static string TitlePlayText()

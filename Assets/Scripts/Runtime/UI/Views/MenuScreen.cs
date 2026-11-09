@@ -49,6 +49,17 @@ namespace FallenYard.UI
             return button;
         }
 
+        /// <summary>Like <see cref="AddButton"/> but at a position in the column (clamped).</summary>
+        public Button InsertButton(int index, string id, string text, Action onClick, bool primary = false)
+        {
+            var button = new Button(onClick) { text = text }.With(id, "fy-button");
+            if (primary) button.AddToClassList("fy-button--primary");
+            index = Math.Max(0, Math.Min(index, _buttons.Count));
+            ButtonColumn.Insert(index, button);
+            _buttons.Insert(index, button);
+            return button;
+        }
+
         public void SetSubtitle(string text)
         {
             SubtitleLabel.text = text ?? "";

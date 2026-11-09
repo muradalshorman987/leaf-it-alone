@@ -29,6 +29,27 @@ namespace FallenYard.Save
         public float compostProgress;
     }
 
+    /// <summary>First-yard tutorial and hint progress. Added in v4 (WP11).</summary>
+    [Serializable]
+    public class TutorialSave
+    {
+        /// <summary>Index of the current Tutorial.TutorialStep (the last value means done).</summary>
+        public int step;
+        /// <summary>Player chose "Skip tutorial".</summary>
+        public bool skipped;
+        /// <summary>One entry per time a hint was shown, so hints can be limited per save.</summary>
+        public List<string> hintsShown = new List<string>();
+
+        public int TimesShown(string hintId)
+        {
+            int n = 0;
+            if (hintsShown == null) return 0;
+            foreach (var h in hintsShown)
+                if (h == hintId) n++;
+            return n;
+        }
+    }
+
     /// <summary>
     /// Everything that persists between sessions. Serialized with JsonUtility.
     ///
@@ -44,8 +65,9 @@ namespace FallenYard.Save
         /// <summary>
         /// v1: coins, tools, completed yards. v2: yard unlocks, yard records, play time, timestamps.
         /// v3: per-yard restoration and compost bin state in <see cref="YardRecord"/>.
+        /// v4: tutorial and hint progress in <see cref="tutorial"/>.
         /// </summary>
-        public const int CurrentVersion = 3;
+        public const int CurrentVersion = 4;
 
         public int version = CurrentVersion;
 
@@ -69,6 +91,9 @@ namespace FallenYard.Save
         public double playTimeSeconds;
         /// <summary>UTC ticks of the last successful write, 0 if never saved.</summary>
         public long savedAtUtcTicks;
+
+        // v4
+        public TutorialSave tutorial = new TutorialSave();
 
         public ToolSaveEntry GetTool(string toolId, bool create)
         {

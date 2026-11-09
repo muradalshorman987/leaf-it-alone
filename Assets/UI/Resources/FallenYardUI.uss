@@ -327,3 +327,231 @@
     min-width: 200px;
     margin: 0 0 0 16px;
 }
+
+/* ---------- tutorial card (WP11) ---------- */
+
+.fy-tutorial {
+    position: absolute;
+    top: 24px;
+    left: 30%;
+    right: 30%;
+    align-items: center;
+    padding: 12px 20px;
+    border-color: var(--fy-pumpkin);
+}
+
+.fy-tutorial--hint {
+    border-color: var(--fy-moss);
+}
+
+.fy-tutorial__title {
+    font-size: 16px;
+    -unity-font-style: bold;
+    color: var(--fy-ink-soft);
+    margin-bottom: 4px;
+}
+
+.fy-tutorial__text {
+    font-size: 22px;
+    white-space: normal;
+    -unity-text-align: middle-center;
+}
+
+.fy-tutorial__footer {
+    font-size: 14px;
+    color: var(--fy-ink-soft);
+    margin-top: 6px;
+}
+
+/* ---------- captions (WP11) ---------- */
+
+.fy-captions {
+    position: absolute;
+    left: 20%;
+    right: 20%;
+    bottom: 64px;
+    align-items: center;
+}
+
+.fy-caption {
+    font-size: 24px;
+    color: #FFFFFF;
+    -unity-text-align: middle-center;
+    white-space: normal;
+    padding: 4px 12px;
+    margin-top: 4px;
+    border-radius: 6px;
+    -unity-text-outline-width: 1px;
+    -unity-text-outline-color: rgba(0, 0, 0, 0.9);
+}
+
+.fy-captions--boxed .fy-caption {
+    background-color: rgba(0, 0, 0, 0.72);
+    -unity-text-outline-width: 0;
+}
+
+.fy-captions--small .fy-caption {
+    font-size: 19px;
+}
+
+.fy-captions--large .fy-caption {
+    font-size: 32px;
+}
+
+/* ---------- options (WP11) ---------- */
+
+.fy-options-overlay {
+    background-color: rgba(30, 20, 12, 0.7);
+}
+
+.fy-options {
+    width: 760px;
+    max-height: 88%;
+    padding: 24px 28px;
+}
+
+.fy-options__header {
+    margin-bottom: 8px;
+}
+
+.fy-options__body {
+    flex-grow: 1;
+    flex-shrink: 1;
+    margin-bottom: 8px;
+}
+
+.fy-options__section {
+    font-size: 28px;
+    -unity-font-style: bold;
+    color: var(--fy-pumpkin);
+    margin: 14px 0 6px 0;
+}
+
+.fy-options__row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 44px;
+}
+
+.fy-options__label {
+    font-size: 20px;
+    flex-grow: 1;
+}
+
+.fy-options__note {
+    font-size: 16px;
+    color: var(--fy-ink-soft);
+}
+
+.fy-options__toggle {
+    font-size: 20px;
+    min-height: 40px;
+}
+
+.fy-options__toggle Label {
+    min-width: 520px;
+    color: var(--fy-ink);
+}
+
+.fy-options__slider {
+    flex-grow: 1;
+    font-size: 20px;
+}
+
+.fy-options__slider Label {
+    min-width: 240px;
+    color: var(--fy-ink);
+}
+
+.fy-options__value {
+    min-width: 56px;
+    -unity-text-align: middle-right;
+    font-size: 20px;
+}
+
+.fy-options__cycle,
+.fy-options__key {
+    min-width: 280px;
+    font-size: 20px;
+    margin: 3px 0;
+}
+
+.fy-options__key--listening {
+    background-color: var(--fy-gold);
+}
+
+.fy-options__wide {
+    margin-top: 10px;
+    font-size: 20px;
+}
+
+.fy-options__swatches {
+    flex-direction: row;
+}
+
+.fy-options__swatch {
+    width: 36px;
+    height: 24px;
+    margin-left: 8px;
+    border-radius: 6px;
+    border-width: 2px;
+    border-color: rgba(59, 42, 30, 0.4);
+}
+
+.fy-options__status {
+    font-size: 18px;
+    color: var(--fy-ink-soft);
+    white-space: normal;
+    min-height: 26px;
+}
+
+.fy-options__footer {
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+/* ---------- colour-blind palettes (WP11, Okabe-Ito; see AccessibilityPalette.cs) ---------- */
+
+.fy-palette--deuteranopia .fy-bar__fill,
+.fy-palette--protanopia .fy-bar__fill {
+    background-color: #0072B2;
+}
+
+.fy-palette--deuteranopia .fy-bar__fill--done,
+.fy-palette--protanopia .fy-bar__fill--done {
+    background-color: #E69F00;
+}
+
+.fy-palette--tritanopia .fy-bar__fill {
+    background-color: #D55E00;
+}
+
+.fy-palette--tritanopia .fy-bar__fill--done {
+    background-color: #009E73;
+}
+
+.fy-palette--highcontrast .fy-bar {
+    background-color: rgba(0, 0, 0, 0.6);
+    border-width: 2px;
+    border-color: #FFFFFF;
+}
+
+.fy-palette--highcontrast .fy-bar__fill {
+    background-color: #FFFFFF;
+}
+
+.fy-palette--highcontrast .fy-bar__fill--done {
+    background-color: #F0E442;
+}
+
+.fy-palette--highcontrast .fy-hud__hint,
+.fy-palette--highcontrast .fy-hud__prompt {
+    -unity-text-outline-width: 2px;
+    -unity-text-outline-color: #000000;
+}
+
+.fy-palette--highcontrast .fy-panel {
+    background-color: #FFF6E6;
+    border-color: #000000;
+}

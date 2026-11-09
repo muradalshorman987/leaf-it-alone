@@ -54,6 +54,8 @@ namespace FallenYard.Settings
         /// <summary>Dark box behind captions for contrast.</summary>
         public bool captionBackground = true;
         public ColorBlindMode colorBlindMode = ColorBlindMode.Off;
+        /// <summary>Draw a ring around leaf piles (the one you can bag pulses).</summary>
+        public bool pileHighlights = true;
         /// <summary>Press sprint once to start sprinting and again to stop, instead of holding it.</summary>
         public bool toggleSprint;
         /// <summary>Press the use-tool button once to start raking/blowing and again to stop, instead of holding it.</summary>

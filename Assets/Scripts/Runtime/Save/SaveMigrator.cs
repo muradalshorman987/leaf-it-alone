@@ -16,6 +16,7 @@ namespace FallenYard.Save
             { 0, V0ToV1 },
             { 1, V1ToV2 },
             { 2, V2ToV3 },
+            { 3, V3ToV4 },
         };
 
         /// <summary>
@@ -58,6 +59,10 @@ namespace FallenYard.Save
             d.unlockedYards ??= new List<string>();
             d.yardRecords ??= new List<YardRecord>();
             d.lastYardId ??= "";
+            d.tutorial ??= new TutorialSave();
+            d.tutorial.hintsShown ??= new List<string>();
+            d.tutorial.hintsShown.RemoveAll(string.IsNullOrEmpty);
+            if (d.tutorial.step < 0) d.tutorial.step = 0;
 
             d.tools.RemoveAll(t => t == null || string.IsNullOrEmpty(t.toolId));
             d.completedYards.RemoveAll(string.IsNullOrEmpty);
@@ -99,6 +104,24 @@ namespace FallenYard.Save
         static void V2ToV3(SaveData d)
         {
         }
+
+        /// <summary>
+        /// v4 adds tutorial progress. Players who already earned coins or finished a yard don't need
+        /// the first-yard tutorial, so it starts as done for them (hints still appear).
+        /// </summary>
+        static void V3ToV4(SaveData d)
+        {
+            d.tutorial ??= new TutorialSave();
+            bool veteran = d.coins > 0 || d.totalLeavesBagged > 0 || d.lifetimeCoinsEarned > 0 ||
+                           (d.completedYards != null && d.completedYards.Count > 0);
+            if (veteran) d.tutorial.step = TutorialStepDone;
+        }
+
+        /// <summary>
+        /// Value of Tutorial.TutorialStep.Done. Kept here as a number so Save does not depend on
+        /// Tutorial; a test checks the two stay equal.
+        /// </summary>
+        public const int TutorialStepDone = 6;
 
         /// <summary>v2 adds yard unlocks and per-yard records. Seed them from the completed list.</summary>
         static void V1ToV2(SaveData d)
