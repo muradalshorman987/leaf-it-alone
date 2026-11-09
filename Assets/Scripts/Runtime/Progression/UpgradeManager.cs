@@ -86,6 +86,7 @@ namespace FallenYard.Progression
             entry.level++;
             GameManager.Instance.Save();
             OnToolUpgraded?.Invoke(toolId, entry.level);
+            GameEvents.RaiseToolUpgraded(toolId, entry.level);
             return true;
         }
     }

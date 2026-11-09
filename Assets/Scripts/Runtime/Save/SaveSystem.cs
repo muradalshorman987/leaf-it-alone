@@ -9,7 +9,14 @@ namespace FallenYard.Save
     {
         const string FileName = "fallenyard_save.json";
 
-        public static string FilePath => Path.Combine(Application.persistentDataPath, FileName);
+        /// <summary>
+        /// Folder the save file lives in. Null means Application.persistentDataPath.
+        /// Tests point this at a temp folder so they never touch a real save.
+        /// </summary>
+        public static string DirectoryOverride { get; set; }
+
+        public static string FilePath =>
+            Path.Combine(string.IsNullOrEmpty(DirectoryOverride) ? Application.persistentDataPath : DirectoryOverride, FileName);
 
         public static SaveData Load()
         {

@@ -18,9 +18,18 @@ namespace FallenYard.Progression
 
         public event Action OnYardCleaned;
 
+        float _lastReportedClean = -1f;
+
         void Update()
         {
-            if (IsComplete || LeafField.Instance == null || LeafField.Instance.TotalLeaves == 0) return;
+            if (LeafField.Instance == null || LeafField.Instance.TotalLeaves == 0) return;
+            float clean = CleanFraction;
+            if (Mathf.Abs(clean - _lastReportedClean) >= 0.001f)
+            {
+                _lastReportedClean = clean;
+                GameEvents.RaiseYardCleanChanged(clean);
+            }
+            if (IsComplete) return;
             if (CleanFraction >= completeAtFraction)
             {
                 IsComplete = true;
