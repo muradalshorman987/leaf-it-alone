@@ -233,7 +233,9 @@ namespace FallenYard.Leaves
                 var rt = _types[type];
                 int variants = Mathf.Max(1, rt.materials.Length);
                 int variant = Mathf.Min(variants - 1, (int)(R() * variants));
-                var p = new float2(_grid.origin.x + R() * yardSize.x, _grid.origin.y + R() * yardSize.y);
+                var p = SpawnSampler != null
+                    ? SampledSpawnPoint(rng)
+                    : new float2(_grid.origin.x + R() * yardSize.x, _grid.origin.y + R() * yardSize.y);
                 temp[i] = new LeafState
                 {
                     pos = p,
@@ -269,6 +271,23 @@ namespace FallenYard.Leaves
             _renderBounds = new Bounds(center + Vector3.up * 2f, new Vector3(yardSize.x + 4f, 20f, yardSize.y + 4f));
             _warnedNoMaterial = false;
             OnFieldSpawned?.Invoke();
+        }
+
+        /// <summary>
+        /// Where leaves land on <see cref="Spawn"/>. Null spreads them evenly over the yard.
+        /// Yards (WP7) set this to put leaves under trees and keep them out of houses.
+        /// Not serialized: set it before Start (or before calling Spawn).
+        /// </summary>
+        public ILeafSpawnSampler SpawnSampler { get; set; }
+
+        float2 SampledSpawnPoint(System.Random rng)
+        {
+            Vector2 local = SpawnSampler.SamplePosition(rng);
+            float hx = yardSize.x * 0.5f, hz = yardSize.y * 0.5f;
+            // Keep a hair inside the edge so the leaf maps to a valid grid cell.
+            float x = Mathf.Clamp(local.x, -hx, hx - 0.001f) + hx;
+            float z = Mathf.Clamp(local.y, -hz, hz - 0.001f) + hz;
+            return new float2(_grid.origin.x + Mathf.Max(0f, x), _grid.origin.y + Mathf.Max(0f, z));
         }
 
         void ResolveTypes()
