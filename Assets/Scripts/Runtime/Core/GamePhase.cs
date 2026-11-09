@@ -12,5 +12,7 @@ namespace FallenYard.Core
         Paused,
         Shop,
         YardComplete,
+        /// <summary>The Hollow Creek map: pick, open or travel to a yard (WP7).</summary>
+        YardMap,
     }
 }

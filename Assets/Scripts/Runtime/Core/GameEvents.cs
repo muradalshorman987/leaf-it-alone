@@ -56,6 +56,12 @@ namespace FallenYard.Core
         /// <summary>Name of a sound cue that just started (e.g. "CoinChime"), for captions. Raised by the AudioManager (WP8).</summary>
         public static event Action<string> AudioCuePlayed;
 
+        /// <summary>Yard id, once the yard's scene is set up and its leaves are about to spawn. Raised by YardLoader (WP7).</summary>
+        public static event Action<string> YardLoaded;
+
+        /// <summary>Yard id the player picked on the yard map or yard-complete card. Raised by UI (WP4); LevelFlow (WP7) travels there.</summary>
+        public static event Action<string> YardTravelRequested;
+
         public static void RaiseCoinsChanged(int total) => CoinsChanged?.Invoke(total);
         public static void RaiseYardCleanChanged(float fraction) => YardCleanChanged?.Invoke(Mathf.Clamp01(fraction));
         public static void RaisePileBagged(int leaves, int coinsEarned) => PileBagged?.Invoke(leaves, coinsEarned);
@@ -70,6 +76,8 @@ namespace FallenYard.Core
         public static void RaiseLeavesBaggedAt(Vector3 position, int leaves) => LeavesBaggedAt?.Invoke(position, Mathf.Max(0, leaves));
         public static void RaiseWeatherChanged(string weatherId) => WeatherChanged?.Invoke(weatherId);
         public static void RaiseAudioCuePlayed(string cueId) => AudioCuePlayed?.Invoke(cueId);
+        public static void RaiseYardLoaded(string yardId) => YardLoaded?.Invoke(yardId);
+        public static void RaiseYardTravelRequested(string yardId) => YardTravelRequested?.Invoke(yardId);
 
         /// <summary>
         /// Drops every subscriber. Runs automatically before each play session so stale
@@ -93,6 +101,8 @@ namespace FallenYard.Core
             LeavesBaggedAt = null;
             WeatherChanged = null;
             AudioCuePlayed = null;
+            YardLoaded = null;
+            YardTravelRequested = null;
         }
     }
 }
