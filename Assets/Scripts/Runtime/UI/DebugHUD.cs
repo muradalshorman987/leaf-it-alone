@@ -8,8 +8,10 @@ using UnityEngine;
 namespace FallenYard.UI
 {
     /// <summary>
-    /// Zero-setup IMGUI HUD and upgrade shop so the loop is playable right away.
-    /// Replace with a proper uGUI/UI Toolkit HUD once the art direction is set.
+    /// Developer overlay (IMGUI). When a <see cref="UIManager"/> is in the scene this
+    /// only draws a stats box, is hidden by default and toggles with F3 in the editor
+    /// and development builds. Without a UIManager it falls back to the original
+    /// zero-setup HUD + Tab shop so old scenes stay playable.
     /// </summary>
     public class DebugHUD : MonoBehaviour
     {
@@ -17,7 +19,12 @@ namespace FallenYard.UI
         public BagInteractor bagInteractor;
         public YardProgress yardProgress;
 
+        [Tooltip("Show the stats overlay as soon as play starts (editor and development builds only). F3 toggles it.")]
+        public bool visibleOnStart;
+
         bool _shopOpen;
+        bool _visible;
+        bool _hasRealUI;
         float _cleanedBannerUntil;
         GUIStyle _big, _label;
 
@@ -27,10 +34,21 @@ namespace FallenYard.UI
             if (bagInteractor == null) bagInteractor = FindFirstObjectByType<BagInteractor>();
             if (yardProgress == null) yardProgress = FindFirstObjectByType<YardProgress>();
             if (yardProgress != null) yardProgress.OnYardCleaned += () => _cleanedBannerUntil = Time.time + 6f;
+
+            _hasRealUI = FindFirstObjectByType<UIManager>() != null;
+            if (_hasRealUI && !Debug.isDebugBuild)
+            {
+                enabled = false;
+                return;
+            }
+            _visible = visibleOnStart || !_hasRealUI;
         }
 
         void Update()
         {
+            if (UIInput.DebugTogglePressed) _visible = !_visible;
+            if (_hasRealUI) return; // UIManager owns Tab, pause and the shop.
+
             if (GameInput.MenuPressed)
             {
                 _shopOpen = !_shopOpen;
@@ -41,6 +59,13 @@ namespace FallenYard.UI
 
         void OnGUI()
         {
+            if (!_visible) return;
+            if (_hasRealUI)
+            {
+                DrawDevStats();
+                return;
+            }
+
             _big ??= new GUIStyle(GUI.skin.label) { fontSize = 28, alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold };
             _label ??= new GUIStyle(GUI.skin.label) { fontSize = 16 };
 
@@ -66,6 +91,23 @@ namespace FallenYard.UI
                 GUI.Label(new Rect(0, Screen.height * 0.25f, Screen.width, 50), "Yard cleaned! Bonus coins earned.", _big);
 
             if (_shopOpen) DrawShop();
+        }
+
+        /// <summary>Compact stats box in the top-right corner, next to the real HUD.</summary>
+        void DrawDevStats()
+        {
+            _label ??= new GUIStyle(GUI.skin.label) { fontSize = 14 };
+            var field = LeafField.Instance;
+            float clean = field != null ? field.CleanFraction * 100f : 0f;
+            int piles = PileDetector.Instance != null ? PileDetector.Instance.Piles.Count : 0;
+            int leaves = field != null ? field.TotalLeaves : 0;
+            float fps = Time.unscaledDeltaTime > 0f ? 1f / Time.unscaledDeltaTime : 0f;
+
+            var box = new Rect(Screen.width - 230, 10, 220, 92);
+            GUI.Box(box, "Dev (F3)");
+            GUI.Label(new Rect(box.x + 10, box.y + 20, 200, 20), $"FPS {fps:0}   Leaves {leaves}", _label);
+            GUI.Label(new Rect(box.x + 10, box.y + 42, 200, 20), $"Clean {clean:0.0}%   Piles {piles}", _label);
+            GUI.Label(new Rect(box.x + 10, box.y + 64, 200, 20), $"Phase {(UIManager.Instance != null ? UIManager.Instance.Flow.Phase.ToString() : "-")}", _label);
         }
 
         void DrawShop()
