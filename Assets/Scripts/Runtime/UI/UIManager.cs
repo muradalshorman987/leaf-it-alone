@@ -3,6 +3,7 @@ using FallenYard.Progression;
 using FallenYard.Tools;
 using UnityEngine;
 using UnityEngine.UIElements;
+using Cursor = UnityEngine.Cursor;
 
 namespace FallenYard.UI
 {
