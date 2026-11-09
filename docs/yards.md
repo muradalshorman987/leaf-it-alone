@@ -26,6 +26,7 @@ Commit the generated assets and scenes from the PC as usual.
 - `YardGreybox` builds the yard from primitives: ground, fence with a gate gap, houses, trees, hedges, props, mailbox, compost bin, and hidden wildflowers. WP9 art can replace the primitives; object names (`House_00`, `Tree_03`, ...) and positions stay put.
 - `YardRestoration` is the restoration hook: as `YardRestorationChanged` rises, the grass eases to its restored colour and flowers appear one by one (`ShownChanged` event for VFX/audio). The compost bin still sets the global `_FallenYardRestoration` shader float.
 - `LevelFlow` moves between yards: saves, sets `GameState.SkipTitleOnNextLoad`, loads the scene. It listens to `GameEvents.YardTravelRequested`.
+- Build All Yards also adds the WP10 lighting/weather/VFX rig to every yard scene and a row per yard to `Assets/VFX/Settings/YardGradeTable.asset` (warm Orchard, cool Church Green, ...). Rows someone already tuned are kept.
 
 ## Flow for the player
 

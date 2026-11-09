@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using FallenYard.Leaves;
 using FallenYard.Levels;
 using FallenYard.Progression;
+using FallenYard.VFX;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -85,6 +86,8 @@ namespace FallenYard.EditorTools
             {
                 EditorUtility.ClearProgressBar();
             }
+
+            AddGradeRows(catalog, resetData);
 
             for (int i = scenePaths.Count - 1; i >= 0; i--)
                 TestYardBuilder.AddSceneToBuild(scenePaths[i], first: true);
@@ -176,6 +179,52 @@ namespace FallenYard.EditorTools
             mat.enableInstancing = instanced || mat.enableInstancing;
             EditorUtility.SetDirty(mat);
             return mat;
+        }
+
+        // ------------------------------------------------------------------ colour grading (WP10)
+
+        /// <summary>Each yard's mood on top of WP10's default grades: (temperature, saturation, vignette) offsets.</summary>
+        static (float temperature, float saturation, float vignette) GradeMood(string yardId)
+        {
+            switch (yardId)
+            {
+                case YardLayouts.StarterLawn: return (4f, 0f, 0f);       // early autumn, friendly
+                case YardLayouts.CornerLot: return (8f, 4f, 0f);         // red maples
+                case YardLayouts.Orchard: return (10f, 2f, 0f);          // golden afternoon
+                case YardLayouts.ChurchGreen: return (-6f, -8f, 0.03f);  // cool, muted late autumn
+                case YardLayouts.HilltopManor: return (2f, -4f, 0.05f);  // low sun, windswept
+                default: return (0f, 0f, 0f);
+            }
+        }
+
+        /// <summary>Adds a grade row per yard to WP10's YardGradeTable (keeps rows someone already tuned).</summary>
+        static void AddGradeRows(YardCatalog catalog, bool reset)
+        {
+            var table = AssetDatabase.LoadAssetAtPath<YardGradeTable>("Assets/VFX/Settings/YardGradeTable.asset");
+            if (table == null) return; // created by Fallen Yard > Add Lighting, Weather and VFX
+            table.yards ??= new List<YardGrade>();
+            foreach (var def in catalog.yards)
+            {
+                var row = table.yards.Find(r => r != null && r.yardId == def.yardId);
+                if (row != null && !reset) continue;
+                if (row == null)
+                {
+                    row = new YardGrade { yardId = def.yardId };
+                    table.yards.Add(row);
+                }
+                var mood = GradeMood(def.yardId);
+                row.messy = Shift(table.defaultMessy, mood);
+                row.restored = Shift(table.defaultRestored, mood);
+            }
+            EditorUtility.SetDirty(table);
+        }
+
+        static ColorGrade Shift(ColorGrade g, (float temperature, float saturation, float vignette) mood)
+        {
+            g.temperature = Mathf.Clamp(g.temperature + mood.temperature, -100f, 100f);
+            g.saturation = Mathf.Clamp(g.saturation + mood.saturation, -100f, 100f);
+            g.vignette = Mathf.Clamp01(g.vignette + mood.vignette);
+            return g;
         }
 
         // ------------------------------------------------------------------ scene
