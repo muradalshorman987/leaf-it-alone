@@ -201,6 +201,9 @@ namespace FallenYard.EditorTools
             hud.bagInteractor = bag;
             hud.yardProgress = managers.GetComponent<YardProgress>();
 
+            // Time of day, weather, particles and post-processing (WP10)
+            LightingSetup.AddRigToScene();
+
             EditorSceneManager.SaveScene(scene, ScenePath);
             var buildScenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
             EditorBuildSettings.scenes = buildScenes;

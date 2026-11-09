@@ -3,6 +3,7 @@
     "rootNamespace": "FallenYard.EditorTools",
     "references": [
         "FallenYard.Runtime",
+        "FallenYard.VFX",
         "Unity.RenderPipelines.Universal.Runtime",
         "Unity.RenderPipelines.Core.Runtime"
     ],
