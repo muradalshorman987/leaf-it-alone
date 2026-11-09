@@ -67,7 +67,7 @@ namespace FallenYard.Tools
             if (bin != null)
             {
                 bool hopperHasLeaves = vacuum != null && vacuum.IsUnlocked && !vacuum.Hopper.IsEmpty;
-                Prompt = hopperHasLeaves ? $"[E] Empty hopper into bin ({vacuum.Hopper.Count} leaves)" : bin.Prompt;
+                Prompt = hopperHasLeaves ? $"[{GameInput.Label(GameAction.Interact)}] Empty hopper into bin ({vacuum.Hopper.Count} leaves)" : bin.Prompt;
                 if (!pressed) return;
                 if (hopperHasLeaves) vacuum.EmptyHopper();
                 else bin.TrySpread();
@@ -78,7 +78,7 @@ namespace FallenYard.Tools
             if (hasHit && PileDetector.Instance != null && LeafField.Instance != null &&
                 PileDetector.Instance.TryGetPileNear(hit.point, 0.6f, out var pile))
             {
-                Prompt = $"[E] Bag pile ({pile.leafCount} leaves)";
+                Prompt = $"[{GameInput.Label(GameAction.Interact)}] Bag pile ({pile.leafCount} leaves)";
                 if (!pressed) return;
                 var leaves = LeafTargets.Current;
                 int bagged = leaves != null ? leaves.CollectInRadius(pile.center, pile.radius, Capacity) : 0;
@@ -93,7 +93,7 @@ namespace FallenYard.Tools
             if (CompostBin.Instance == null && vacuum != null && toolController != null &&
                 ReferenceEquals(toolController.Current, vacuum) && !vacuum.Hopper.IsEmpty)
             {
-                Prompt = $"[E] Empty hopper ({vacuum.Hopper.Count} leaves)";
+                Prompt = $"[{GameInput.Label(GameAction.Interact)}] Empty hopper ({vacuum.Hopper.Count} leaves)";
                 if (pressed) vacuum.EmptyHopper();
             }
         }

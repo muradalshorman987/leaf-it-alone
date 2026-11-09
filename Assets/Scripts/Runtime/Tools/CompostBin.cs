@@ -44,7 +44,7 @@ namespace FallenYard.Tools
             {
                 var m = Model;
                 if (m.ReadyBatches > 0 && !m.IsFullyRestored)
-                    return $"[E] Spread fertilizer ({m.ReadyBatches} ready)";
+                    return $"[{GameInput.Label(GameAction.Interact)}] Spread fertilizer ({m.ReadyBatches} ready)";
                 if (m.IsComposting)
                     return $"Composting... {Mathf.RoundToInt(m.CompostProgress * 100f)}%";
                 if (m.IsFullyRestored)

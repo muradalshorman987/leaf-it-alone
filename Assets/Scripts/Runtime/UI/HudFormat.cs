@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.Text;
+using FallenYard.Core;
 using UnityEngine;
 
 namespace FallenYard.UI
@@ -61,6 +62,27 @@ namespace FallenYard.UI
         {
             string text = $"Bagged {leaves.ToString("N0", Invariant)} {(leaves == 1 ? "leaf" : "leaves")}";
             return coins > 0 ? $"{text}  +{coins.ToString("N0", Invariant)} coins" : text;
+        }
+    
+        /// <summary>
+        /// The HUD's key reminder line for the current bindings. With the default keys this is
+        /// exactly <see cref="HudView.HintText"/>.
+        /// </summary>
+        public static string KeyHints(KeyBindings bindings)
+        {
+            bindings ??= new KeyBindings();
+            return $"{ToolKeys(bindings)} tools   {bindings.Label(GameAction.Interact)} bag   {bindings.Label(GameAction.Shop)} shop   Esc pause";
+        }
+
+        /// <summary>"1-4" for the default digits, otherwise the four keys joined with "/".</summary>
+        public static string ToolKeys(KeyBindings bindings)
+        {
+            bindings ??= new KeyBindings();
+            string a = bindings.Get(GameAction.Tool1), b = bindings.Get(GameAction.Tool2),
+                c = bindings.Get(GameAction.Tool3), d = bindings.Get(GameAction.Tool4);
+            if (a == "Digit1" && b == "Digit2" && c == "Digit3" && d == "Digit4") return "1-4";
+            return string.Join("/", bindings.Label(GameAction.Tool1), bindings.Label(GameAction.Tool2),
+                bindings.Label(GameAction.Tool3), bindings.Label(GameAction.Tool4));
         }
     }
 }

@@ -5,6 +5,12 @@ namespace FallenYard.Settings
 {
     public enum AudioChannel { Master, Music, Sfx, Ambience }
 
+    /// <summary>Palette used for pile highlights and progress colours (see Accessibility.AccessibilityPalette).</summary>
+    public enum ColorBlindMode { Off, Deuteranopia, Protanopia, Tritanopia, HighContrast }
+
+    /// <summary>Text size of sound captions.</summary>
+    public enum CaptionSize { Small, Medium, Large }
+
     /// <summary>
     /// Player options. Stored in their own file (see <see cref="SettingsStore"/>) so that
     /// starting a new game or deleting the save keeps them. Serialized with JsonUtility.
@@ -12,7 +18,8 @@ namespace FallenYard.Settings
     [Serializable]
     public class GameSettings
     {
-        public const int CurrentVersion = 1;
+        /// <summary>v1: audio, controls, camera, graphics. v2: accessibility (captions, palette, hold-to-toggle, hints).</summary>
+        public const int CurrentVersion = 2;
 
         public const float MinSensitivity = 0.1f;
         public const float MaxSensitivity = 10f;
@@ -33,12 +40,26 @@ namespace FallenYard.Settings
         [Header("Controls")]
         public float mouseSensitivity = 2f;
         public bool invertY;
-        /// <summary>Input System binding overrides (InputActionAsset.SaveBindingOverridesAsJson). Empty = defaults.</summary>
+        /// <summary>Rebound keys (Core.KeyBindings.ToJson: only actions that differ from the defaults). Empty = defaults.</summary>
         public string bindingOverridesJson = "";
 
         [Header("Camera")]
         public float fieldOfView = 75f;
         public bool headBob = true;
+
+        [Header("Accessibility (v2)")]
+        /// <summary>Show text captions for sound cues (wind, blower, coins...).</summary>
+        public bool captions;
+        public CaptionSize captionSize = CaptionSize.Medium;
+        /// <summary>Dark box behind captions for contrast.</summary>
+        public bool captionBackground = true;
+        public ColorBlindMode colorBlindMode = ColorBlindMode.Off;
+        /// <summary>Press sprint once to start sprinting and again to stop, instead of holding it.</summary>
+        public bool toggleSprint;
+        /// <summary>Press the use-tool button once to start raking/blowing and again to stop, instead of holding it.</summary>
+        public bool toggleToolUse;
+        /// <summary>Show the first-yard tutorial and contextual hints.</summary>
+        public bool tutorialHints = true;
 
         [Header("Graphics")]
         /// <summary>Index into QualitySettings.names, or -1 to keep the project default.</summary>
@@ -93,6 +114,9 @@ namespace FallenYard.Settings
             mouseSensitivity = ClampSafe(mouseSensitivity, MinSensitivity, MaxSensitivity, 2f);
             fieldOfView = ClampSafe(fieldOfView, MinFov, MaxFov, 75f);
             bindingOverridesJson ??= "";
+
+            if (!Enum.IsDefined(typeof(CaptionSize), captionSize)) captionSize = CaptionSize.Medium;
+            if (!Enum.IsDefined(typeof(ColorBlindMode), colorBlindMode)) colorBlindMode = ColorBlindMode.Off;
 
             if (qualityLevel < -1 || qualityLevel >= qualityLevelCount) qualityLevel = -1;
             if (!Enum.IsDefined(typeof(FullScreenMode), fullScreenMode)) fullScreenMode = FullScreenMode.FullScreenWindow;

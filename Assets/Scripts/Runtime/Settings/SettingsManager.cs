@@ -70,6 +70,7 @@ namespace FallenYard.Settings
             if (GameManager.Instance != null && GameManager.Instance.Data != null)
                 GameManager.Instance.Data.mouseSensitivity = Current.mouseSensitivity;
 
+            KeyBindings.ApplyOverrides(Current.bindingOverridesJson);
             if (CanTouchEngine) ApplyToEngine(Current);
             if (save) SettingsStore.Save(Current);
             Changed?.Invoke(Current);

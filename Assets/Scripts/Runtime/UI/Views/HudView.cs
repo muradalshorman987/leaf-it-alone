@@ -85,6 +85,8 @@ namespace FallenYard.UI
             GameEvents.CoinsChanged += SetCoins;
             GameEvents.YardCleanChanged += SetClean;
             GameEvents.ToolEquipped += OnToolEquipped;
+            KeyBindings.Changed += RefreshKeyHints;
+            RefreshKeyHints();
         }
 
         public void Unbind()
@@ -94,7 +96,11 @@ namespace FallenYard.UI
             GameEvents.CoinsChanged -= SetCoins;
             GameEvents.YardCleanChanged -= SetClean;
             GameEvents.ToolEquipped -= OnToolEquipped;
+            KeyBindings.Changed -= RefreshKeyHints;
         }
+
+        /// <summary>Rewrites the key reminder line after the player rebinds keys.</summary>
+        public void RefreshKeyHints() => HintLabel.text = HudFormat.KeyHints(KeyBindings.Current);
 
         void OnToolEquipped(string toolId) => SetTool(HudFormat.ToolName(toolId, _toolNameLookup));
 

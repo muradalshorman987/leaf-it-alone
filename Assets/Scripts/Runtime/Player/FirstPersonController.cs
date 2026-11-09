@@ -26,6 +26,8 @@ namespace FallenYard.Player
         public float maxPitch = 85f;
         [Tooltip("Flip vertical mouse look.")]
         public bool invertY;
+        [Tooltip("Accessibility: press sprint once to run, again (or stop moving) to walk.")]
+        public bool toggleSprint;
 
         [Header("Camera feel")]
         [Tooltip("Gentle camera bob while walking. Off for motion-sensitive players.")]
@@ -50,6 +52,10 @@ namespace FallenYard.Player
         float _verticalVelocity;
         float _bobPhase;
         float _bobIntensity;
+        readonly HoldToggle _sprint = new HoldToggle();
+
+        /// <summary>True while sprinting (held, or toggled on).</summary>
+        public bool IsSprinting => _sprint.Active;
 
         void Awake()
         {
@@ -86,6 +92,7 @@ namespace FallenYard.Player
             lookSensitivity = s.mouseSensitivity;
             invertY = s.invertY;
             headBobEnabled = s.headBob;
+            toggleSprint = s.toggleSprint;
             if (s.fieldOfView > 0f) baseFov = s.fieldOfView;
         }
 
@@ -108,7 +115,7 @@ namespace FallenYard.Player
             }
 
             Vector2 input = blocked ? Vector2.zero : GameInput.Move;
-            float speed = GameInput.Sprint ? sprintSpeed : walkSpeed;
+            float speed = UpdateSprint(!blocked && GameInput.Sprint, !blocked && GameInput.SprintPressed, input) ? sprintSpeed : walkSpeed;
             Vector3 move = (transform.right * input.x + transform.forward * input.y) * speed;
             CurrentSpeed = move.magnitude;
 
@@ -119,6 +126,19 @@ namespace FallenYard.Player
 
             _cc.Move((move + Vector3.up * _verticalVelocity) * Time.deltaTime);
             UpdateCameraFeel(Time.deltaTime);
+        }
+
+        /// <summary>Hold or toggle sprint. Toggle mode switches off when the player stops moving. Public for tests.</summary>
+        public bool UpdateSprint(bool held, bool pressedThisFrame, Vector2 moveInput)
+        {
+            _sprint.ToggleMode = toggleSprint;
+            bool active = _sprint.Update(held, pressedThisFrame);
+            if (toggleSprint && active && moveInput.sqrMagnitude < 0.01f && !pressedThisFrame)
+            {
+                _sprint.Reset();
+                active = false;
+            }
+            return active;
         }
 
         void UpdateCameraFeel(float dt)
