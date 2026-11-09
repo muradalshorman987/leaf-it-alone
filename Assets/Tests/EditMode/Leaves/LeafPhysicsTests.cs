@@ -76,11 +76,13 @@ namespace FallenYard.Tests.Leaves
         public void SampleGround_IsBilinearBetweenCorners()
         {
             var grid = LeafGrid.Create(Vector3.zero, new Vector2(2f, 2f), 1f); // 2 x 2 cells, 3 x 3 corners
-            using var corners = new NativeArray<float>(9, Allocator.Temp);
-            // Height = x coordinate in metres from the yard's left edge.
+            // Height = x coordinate in metres from the yard's left edge. Filled before wrapping:
+            // a `using` variable's elements can't be assigned (CS1654).
+            var heights = new float[9];
             for (int y = 0; y < 3; y++)
             for (int x = 0; x < 3; x++)
-                corners[y * 3 + x] = x;
+                heights[y * 3 + x] = x;
+            using var corners = new NativeArray<float>(heights, Allocator.Temp);
 
             Assert.AreEqual(0f, LeafPhysics.SampleGround(grid, corners, new float2(-1f, 0f)), 1e-5f);
             Assert.AreEqual(1f, LeafPhysics.SampleGround(grid, corners, new float2(0f, 0.3f)), 1e-5f);
