@@ -3,6 +3,8 @@ using FallenYard.Core;
 using FallenYard.Leaves;
 using FallenYard.Player;
 using FallenYard.Progression;
+using FallenYard.Save;
+using FallenYard.Settings;
 using FallenYard.Tools;
 using FallenYard.UI;
 using UnityEditor;
@@ -119,6 +121,9 @@ namespace FallenYard.EditorTools
             managers.AddComponent<UpgradeManager>().definitions = new[] { rakeDef, blowerDef, bagDef };
             managers.AddComponent<PileDetector>();
             managers.AddComponent<YardProgress>();
+            managers.AddComponent<SettingsManager>();
+            managers.AddComponent<Autosaver>();
+            managers.AddComponent<MetaProgressionService>().unlockTable = MakeYardUnlockTable();
             var hud = managers.AddComponent<DebugHUD>();
 
             // Player
@@ -181,6 +186,20 @@ namespace FallenYard.EditorTools
                 rangeMultiplier = range,
                 capacityMultiplier = capacity,
             };
+
+        /// <summary>Placeholder unlock table until WP7 adds the real yards. The test yard is "yard_01".</summary>
+        static YardUnlockTable MakeYardUnlockTable()
+        {
+            string path = $"{DataDir}/YardUnlockTable.asset";
+            var table = AssetDatabase.LoadAssetAtPath<YardUnlockTable>(path);
+            if (table == null)
+            {
+                table = ScriptableObject.CreateInstance<YardUnlockTable>();
+                table.yards.Add(new YardUnlockRule { yardId = "yard_01", displayName = "Test Yard", unlockedByDefault = true, rewardToolIds = new[] { "blower" } });
+                AssetDatabase.CreateAsset(table, path);
+            }
+            return table;
+        }
 
         static ToolUpgradeDefinition MakeUpgrade(string file, string id, string display, bool unlocked, int unlockCost,
             params ToolUpgradeDefinition.UpgradeLevel[] levels)
