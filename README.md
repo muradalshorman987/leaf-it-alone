@@ -11,7 +11,9 @@ Rake leaves into piles, bag them for coins, unlock a leaf blower and bigger bags
 | --- | --- | --- |
 | Player | `Player/FirstPersonController.cs` | CharacterController walk/sprint/jump + mouse look, head bob toggle, sprint FOV kick |
 | Input | `Core/GameInput.cs` | Works with the new Input System *or* the legacy Input Manager |
-| Leaves | `Leaves/LeafField.cs` | Simulates ~12k leaves as plain arrays, draws them with `Graphics.RenderMeshInstanced` (GPU instancing, 1023 per batch), uniform grid for queries, stacking piles and angle-of-repose slumping |
+| Leaves | `Leaves/LeafField.cs`, `LeafJobs.cs` | Simulates up to 30k leaves in Burst jobs (NativeArrays), uniform grid for queries, stacking piles and angle-of-repose slumping; per-leaf frustum/distance culling and LOD, drawn with `Graphics.RenderMeshInstanced` (GPU instancing, 1023 per draw) |
+| Leaf types | `Leaves/LeafTypes.cs` | Maple (light, flies far), oak, wet clumps (heavy, rake them), pine needles (blow them); `LeafTypeDefinition` assets or a built-in mix |
+| Wind | `Leaves/WindSystem.cs` | Breeze plus periodic gusts that strip the top off un-bagged piles; raises `GameEvents.WindGust` |
 | Leaves | `Leaves/LeafMeshFactory.cs` | Procedural low-poly leaf mesh until Blender assets exist |
 | Piles | `Leaves/PileDetector.cs` | Flood-fills dense grid cells into piles (centre, size, leaf count) |
 | Tools | `Tools/Rake.cs` | Hold LMB and sweep: slow strokes grip, fast flicks slip, strokes toward you gather harder |
@@ -75,7 +77,8 @@ Rake leaves toward one spot until a pile forms (press **F3** to see the pile cou
 
 ## Tuning tips
 
-- **More leaves:** raise `LeafField.leafCount`. Up to ~25k is fine on the main thread; beyond that, move `Simulate` and `RebuildGrid` into Burst jobs (the array layout is already job-friendly).
+- **More leaves:** raise `LeafField.leafCount` (30k is the target on a mid PC). See [docs/leaves-performance.md](docs/leaves-performance.md) for how to profile.
+- **Wind:** tune gusts on the `WindSystem` component (interval, strength, spread); right-click it > *Trigger gust* to test.
 - **Pile shape:** `pileHeightPerLeaf`, `maxPileHeight`, `reposeDifference` (lower = flatter piles).
 - **Rake feel:** `Rake.dragFollow`, `pullSpeed`, `gripCurve` (grip by stroke speed), `towardBonus`, `baseRadius`, `baseStrength`.
 - **Blower feel:** `LeafBlower.coneHalfAngle`, `coreAngleFraction` and `coreShare` (how focused the stream is), `spinUpSeconds` / `spinDownSeconds`.

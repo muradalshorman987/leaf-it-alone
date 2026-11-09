@@ -75,6 +75,8 @@ namespace FallenYard.Tests
         public static void DestroyLeafField(LeafField field)
         {
             if (field == null) return;
+            // OnDestroy doesn't run in EditMode; call it so the field frees its NativeArrays.
+            Call(field, "OnDestroy");
             if (field.leafMesh != null) Object.DestroyImmediate(field.leafMesh);
             Object.DestroyImmediate(field.gameObject);
             SetStaticInstance<LeafField>(null);

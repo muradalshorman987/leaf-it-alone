@@ -2,7 +2,10 @@
     "name": "FallenYard.Runtime",
     "rootNamespace": "FallenYard",
     "references": [
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "Unity.Burst",
+        "Unity.Collections",
+        "Unity.Mathematics"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

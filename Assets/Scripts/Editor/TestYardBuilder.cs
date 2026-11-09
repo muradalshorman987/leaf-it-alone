@@ -128,6 +128,7 @@ namespace FallenYard.EditorTools
             managers.AddComponent<GameManager>();
             managers.AddComponent<UpgradeManager>().definitions = new[] { rakeDef, blowerDef, vacuumDef, mulcherDef, bagDef };
             managers.AddComponent<PileDetector>();
+            managers.AddComponent<WindSystem>();
             managers.AddComponent<YardProgress>();
             managers.AddComponent<SettingsManager>();
             managers.AddComponent<Autosaver>();

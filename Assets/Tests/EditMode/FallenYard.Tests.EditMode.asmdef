@@ -4,7 +4,9 @@
     "references": [
         "FallenYard.Runtime",
         "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner"
+        "UnityEditor.TestRunner",
+        "Unity.Collections",
+        "Unity.Mathematics"
     ],
     "includePlatforms": [
         "Editor"

@@ -50,7 +50,7 @@ Listen in `OnEnable`, unsubscribe in `OnDisable`; raise with `GameEvents.RaiseX(
 | `ToolEquipped` | tool id | `ToolController.Equip` |
 | `ToolUpgraded` | tool id, level | `UpgradeManager.TryUpgrade` |
 | `ToolThrottle` | 0..1 | not yet (WP3) |
-| `WindGust` | direction, strength | not yet (WP2) |
+| `WindGust` | direction, strength | `WindSystem` when a gust starts (WP2) |
 | `YardCompleted` | yard id | `GameManager.MarkYardCompleted` |
 | `StateChanged` | `GamePhase` | not yet (WP4) |
 
