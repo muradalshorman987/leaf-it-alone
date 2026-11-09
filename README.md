@@ -9,15 +9,19 @@ Rake leaves into piles, bag them for coins, unlock a leaf blower and bigger bags
 
 | Area | Script | What it does |
 | --- | --- | --- |
-| Player | `Player/FirstPersonController.cs` | CharacterController walk/sprint/jump + mouse look |
+| Player | `Player/FirstPersonController.cs` | CharacterController walk/sprint/jump + mouse look, head bob toggle, sprint FOV kick |
 | Input | `Core/GameInput.cs` | Works with the new Input System *or* the legacy Input Manager |
 | Leaves | `Leaves/LeafField.cs` | Simulates ~12k leaves as plain arrays, draws them with `Graphics.RenderMeshInstanced` (GPU instancing, 1023 per batch), uniform grid for queries, stacking piles and angle-of-repose slumping |
 | Leaves | `Leaves/LeafMeshFactory.cs` | Procedural low-poly leaf mesh until Blender assets exist |
 | Piles | `Leaves/PileDetector.cs` | Flood-fills dense grid cells into piles (centre, size, leaf count) |
-| Tools | `Tools/Rake.cs` | Hold LMB and sweep: leaves follow the rake head and are drawn toward you |
-| Tools | `Tools/LeafBlower.cs` | Hold LMB: cone push with lift so leaves flutter |
-| Tools | `Tools/BagInteractor.cs` | Look at a pile, press **E** to bag it (capacity-limited) for coins |
-| Tools | `Tools/ToolController.cs` | Switch tools with **1 / 2** |
+| Tools | `Tools/Rake.cs` | Hold LMB and sweep: slow strokes grip, fast flicks slip, strokes toward you gather harder |
+| Tools | `Tools/LeafBlower.cs` | Hold LMB: motor spins up/down; focused core cone inside a soft skirt, with lift so leaves flutter |
+| Tools | `Tools/LeafVacuum.cs` | Hold LMB: sucks leaves into a hopper; empty it at the compost bin for coins |
+| Tools | `Tools/Mulcher.cs` | Aim at a pile and hold LMB to shred it straight into compost (counts double in the bin) |
+| Tools | `Tools/CompostBin.cs` | Every bagged leaf fills the bin; full batches compost into fertilizer you spread with **E** to restore the yard |
+| Tools | `Tools/BagInteractor.cs` | The **E** key: bin first (empty hopper / spread fertilizer), then bag the pile you're looking at |
+| Tools | `Tools/ToolController.cs` | Switch tools with **1-4**, broadcasts tool throttle for audio/VFX |
+| Tools | `Tools/ITool.cs`, `Tools/ILeafTarget.cs` | Tool contract, and the only way tools touch leaves (fakeable in tests) |
 | Progress | `Progression/UpgradeManager.cs` + `ToolUpgradeDefinition.cs` | Upgrade hooks: tools read radius/strength/range/capacity multipliers per level |
 | Progress | `Progression/YardProgress.cs` | Clean percentage, completion bonus at 95% |
 | Save | `Save/SaveSystem.cs`, `SaveData.cs` | Atomic JSON save in `Application.persistentDataPath` (coins, tool levels, finished yards) |
@@ -44,21 +48,21 @@ Rake leaves into piles, bag them for coins, unlock a leaf blower and bigger bags
 | WASD / Shift / Space | Move / sprint / jump |
 | Mouse | Look |
 | Left mouse (hold) | Use tool |
-| 1 / 2 | Rake / Leaf Blower (unlock the blower in the shop) |
-| E | Bag the pile you're looking at |
+| 1 / 2 / 3 / 4 | Rake / Leaf Blower / Leaf Vacuum / Mulcher (unlock tools in the shop) |
+| E | Bag the pile you're looking at, or use the compost bin |
 | Tab | Upgrade shop (the Tool Shed) |
 | Esc | Pause menu / close whatever is open |
 | F3 | Developer stats overlay (editor and development builds) |
 
 ### The core loop
 
-Rake leaves toward one spot until a pile forms (press **F3** to see the pile count), look at it and press **E**. Coins buy rake upgrades, bigger bags, and the leaf blower. Bag 95% of the yard for a completion bonus.
+Rake leaves toward one spot until a pile forms (press **F3** to see the pile count), look at it and press **E**. Coins buy rake upgrades, bigger bags, and the leaf blower. Bag 95% of the yard for a completion bonus. Everything you bag fills the compost bin in the corner; when a batch is ready, look at the bin and press **E** to spread fertilizer and restore the yard.
 
 ## Tests, CI and shared events
 
 - Tests: *Window > General > Test Runner* (EditMode and PlayMode). They live in `Assets/Tests/`.
 - CI: GitHub Actions with GameCI runs the tests on every PR and builds Windows on `main`. It needs three repo secrets once; see [.github/CI.md](.github/CI.md).
-- Systems talk through `Core/GameEvents.cs` (coins, piles bagged, tool equipped/upgraded, yard clean %, yard completed, wind, game phase) instead of referencing each other.
+- Systems talk through `Core/GameEvents.cs` (coins, piles bagged, tool equipped/upgraded/throttle, compost fill, yard restoration, yard clean %, yard completed, wind, game phase) instead of referencing each other.
 - Art and audio go through Git LFS: run `git lfs install` once.
 
 ## Optional: let Claude drive the editor (MCP for Unity)
@@ -73,7 +77,11 @@ Rake leaves toward one spot until a pile forms (press **F3** to see the pile cou
 
 - **More leaves:** raise `LeafField.leafCount`. Up to ~25k is fine on the main thread; beyond that, move `Simulate` and `RebuildGrid` into Burst jobs (the array layout is already job-friendly).
 - **Pile shape:** `pileHeightPerLeaf`, `maxPileHeight`, `reposeDifference` (lower = flatter piles).
-- **Rake feel:** `Rake.dragFollow`, `pullSpeed`, `baseRadius`, `baseStrength`.
+- **Rake feel:** `Rake.dragFollow`, `pullSpeed`, `gripCurve` (grip by stroke speed), `towardBonus`, `baseRadius`, `baseStrength`.
+- **Blower feel:** `LeafBlower.coneHalfAngle`, `coreAngleFraction` and `coreShare` (how focused the stream is), `spinUpSeconds` / `spinDownSeconds`.
+- **Vacuum / mulcher:** `LeafVacuum.leavesPerSecond`, `baseHopperCapacity`; `Mulcher.secondsPerPile`, `compostMultiplier`.
+- **Compost:** `CompostBin.leavesPerBatch`, `compostSeconds`, `restorePerBatch`. Shaders can read the global float `_FallenYardRestoration` (0..1).
+- **Camera:** `FirstPersonController.headBobEnabled`, `headBobAmount`, `baseFov`, `sprintFovKick`.
 - **Custom leaves:** drop a Blender leaf mesh into `LeafField.leafMesh`. Keep it tiny (under 20 tris) and enable GPU Instancing on its materials.
 
 ## Troubleshooting
