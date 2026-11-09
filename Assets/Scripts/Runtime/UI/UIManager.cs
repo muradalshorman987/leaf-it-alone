@@ -1,4 +1,5 @@
 using FallenYard.Core;
+using FallenYard.Levels;
 using FallenYard.Progression;
 using FallenYard.Tools;
 using UnityEngine;
@@ -40,6 +41,9 @@ namespace FallenYard.UI
         public MenuScreen TitleMenu { get; private set; }
         public MenuScreen PauseMenu { get; private set; }
         public MenuScreen YardCompleteCard { get; private set; }
+        public YardMapView YardMap { get; private set; }
+        /// <summary>"On to the next yard" button on the yard-complete card (hidden when there's nowhere to go).</summary>
+        public Button NextYardButton { get; private set; }
         public ToastQueue Toasts { get; private set; }
         public ToastView ToastView { get; private set; }
 
@@ -48,6 +52,7 @@ namespace FallenYard.UI
         BagInteractor _bag;
         YardProgress _yard;
         bool _built;
+        string _arrivalNote;
 
         void Awake()
         {
@@ -69,6 +74,7 @@ namespace FallenYard.UI
             GameEvents.ToolUpgraded += OnToolUpgraded;
             GameEvents.YardCompleted += OnYardCompleted;
             GameEvents.CoinsChanged += OnCoinsChanged;
+            GameEvents.YardLoaded += OnYardLoaded;
             Hud?.Bind(LookupToolName);
         }
 
@@ -78,6 +84,7 @@ namespace FallenYard.UI
             GameEvents.ToolUpgraded -= OnToolUpgraded;
             GameEvents.YardCompleted -= OnYardCompleted;
             GameEvents.CoinsChanged -= OnCoinsChanged;
+            GameEvents.YardLoaded -= OnYardLoaded;
             Hud?.Unbind();
             Time.timeScale = 1f;
             GameState.InputBlocked = false;
@@ -96,7 +103,9 @@ namespace FallenYard.UI
             _yard = FindFirstObjectByType<YardProgress>();
             if (_yard != null) Hud.SetGoal(_yard.completeAtFraction);
             if (GameManager.Instance != null) Hud.SetCoins(GameManager.Instance.Coins);
-            Flow.SetPhase(showTitleOnStart ? GamePhase.TitleMenu : GamePhase.Playing);
+            // Arriving from another yard skips the title (LevelFlow sets the flag before loading).
+            bool arrived = GameState.ConsumeSkipTitle();
+            Flow.SetPhase(showTitleOnStart && !arrived ? GamePhase.TitleMenu : GamePhase.Playing);
         }
 
         void Update()
@@ -192,19 +201,34 @@ namespace FallenYard.UI
             PauseMenu = new MenuScreen("pause", "Paused", "Hollow Creek will wait.");
             PauseMenu.AddButton("pause-resume", "Resume", () => Flow.Resume(), primary: true);
             PauseMenu.AddButton("pause-shop", "Tool Shed", () => Flow.ToggleShop());
+            var pauseMap = PauseMenu.AddButton("pause-map", "Hollow Creek map", () => Flow.OpenYardMap());
             PauseMenu.AddButton("pause-title", "Save and quit to title", () => Flow.ReturnToTitle());
             PauseMenu.AddButton("pause-quit", "Quit game", QuitGame);
             _root.Add(PauseMenu.Root);
 
             YardCompleteCard = new MenuScreen("yard-complete", "Yard cleaned!", "Your neighbour left a little thank-you in your coin jar.", "fy-overlay--soft");
-            YardCompleteCard.AddButton("yard-complete-continue", "Keep raking", () => Flow.Resume(), primary: true);
+            NextYardButton = YardCompleteCard.AddButton("yard-complete-next", "On to the next yard", GoToNextYard, primary: true);
+            YardCompleteCard.AddButton("yard-complete-continue", "Keep raking", () => Flow.Resume());
             YardCompleteCard.AddButton("yard-complete-shop", "Visit the Tool Shed", () => Flow.ToggleShop());
+            var completeMap = YardCompleteCard.AddButton("yard-complete-map", "Hollow Creek map", () => Flow.OpenYardMap());
             _root.Add(YardCompleteCard.Root);
 
             TitleMenu = new MenuScreen("title", "Fallen Yard", "An autumn in Hollow Creek", "fy-overlay--title");
-            TitleMenu.AddButton("title-play", TitlePlayText(), () => Flow.StartGame(), primary: true);
+            TitleMenu.AddButton("title-play", TitlePlayText(), PlayFromTitle, primary: true);
+            var titleMap = TitleMenu.AddButton("title-map", "Hollow Creek map", () => Flow.OpenYardMap());
             TitleMenu.AddButton("title-quit", "Quit", QuitGame);
             _root.Add(TitleMenu.Root);
+
+            YardMap = new YardMapView();
+            YardMap.RowChosen += OnYardRowChosen;
+            YardMap.CloseRequested += () => Flow.CloseYardMap();
+            _root.Add(YardMap.Root);
+
+            // Scenes without yard travel (e.g. the test yard) hide the map buttons.
+            bool hasYards = LevelFlow.Instance != null && LevelFlow.Instance.catalog != null;
+            UIViewUtil.SetVisible(pauseMap, hasYards);
+            UIViewUtil.SetVisible(completeMap, hasYards);
+            UIViewUtil.SetVisible(titleMap, hasYards);
 
             _built = true;
         }
@@ -235,7 +259,25 @@ namespace FallenYard.UI
             else TitleMenu.Hide();
 
             if (next == GamePhase.Paused) PauseMenu.Show(); else PauseMenu.Hide();
-            if (next == GamePhase.YardComplete) YardCompleteCard.Show(); else YardCompleteCard.Hide();
+            if (next == GamePhase.YardComplete)
+            {
+                RefreshNextYardButton();
+                YardCompleteCard.Show();
+            }
+            else YardCompleteCard.Hide();
+
+            if (next == GamePhase.YardMap)
+            {
+                RefreshYardMap();
+                YardMap.Show();
+            }
+            else YardMap.Hide();
+
+            if (next == GamePhase.Playing && !string.IsNullOrEmpty(_arrivalNote))
+            {
+                Toasts.Push(_arrivalNote, toastSeconds * 3f);
+                _arrivalNote = null;
+            }
 
             if (next == GamePhase.Shop)
             {
@@ -274,6 +316,7 @@ namespace FallenYard.UI
         void OnCoinsChanged(int _)
         {
             if (_built && Flow.Phase == GamePhase.Shop) RefreshShop();
+            if (_built && Flow.Phase == GamePhase.YardMap) RefreshYardMap();
         }
 
         void OnPileBagged(int leaves, int coins) => Toasts.Push(HudFormat.PileBagged(leaves, coins), toastSeconds);
@@ -282,6 +325,89 @@ namespace FallenYard.UI
             Toasts.Push($"{HudFormat.ToolName(toolId, LookupToolName)} upgraded to Lv {level}", toastSeconds);
 
         void OnYardCompleted(string yardId) => Flow.OnYardCompleted();
+
+        // ---------------------------------------------------------------- yards (WP7)
+
+        /// <summary>Title "Start raking / Continue": travels to the saved yard if it's another scene, else plays here.</summary>
+        void PlayFromTitle()
+        {
+            var flow = LevelFlow.Instance;
+            if (flow != null && flow.TryContinueElsewhere()) return;
+            Flow.StartGame();
+        }
+
+        void OnYardLoaded(string yardId)
+        {
+            var def = LevelFlow.Instance != null ? LevelFlow.Instance.GetYard(yardId) : null;
+            _arrivalNote = def != null ? HudFormat.ArrivalNote(def.displayName, def.neighbourName, def.neighbourNote) : null;
+            if (_built && Flow.Phase == GamePhase.Playing && _arrivalNote != null)
+            {
+                Toasts.Push(_arrivalNote, toastSeconds * 3f);
+                _arrivalNote = null;
+            }
+        }
+
+        void RefreshYardMap()
+        {
+            var flow = LevelFlow.Instance;
+            var gm = GameManager.Instance;
+            int coins = gm != null ? gm.Coins : 0;
+            var rows = YardMapModel.BuildRows(flow != null ? flow.catalog : null, gm != null ? gm.Data : null,
+                flow != null ? flow.currentYardId : null, coins);
+            YardMap.Refresh(rows, coins);
+        }
+
+        void OnYardRowChosen(YardMapRow row)
+        {
+            switch (row.Action)
+            {
+                case YardMapAction.Current:
+                    Flow.Resume();
+                    break;
+                case YardMapAction.Play:
+                    GameEvents.RaiseYardTravelRequested(row.YardId);
+                    break;
+                case YardMapAction.Buy:
+                    if (TryOpenYard(row.YardId, row.Title)) RefreshYardMap();
+                    break;
+            }
+        }
+
+        bool TryOpenYard(string yardId, string title)
+        {
+            var meta = MetaProgressionService.Instance;
+            if (meta == null || !meta.TryPurchaseYard(yardId)) return false;
+            Toasts.Push($"{title} is open", toastSeconds);
+            return true;
+        }
+
+        void RefreshNextYardButton()
+        {
+            var flow = LevelFlow.Instance;
+            string text = null;
+            if (flow != null)
+            {
+                var (next, status) = flow.NextYard;
+                var rule = next != null && flow.catalog != null && flow.catalog.unlockTable != null ? flow.catalog.unlockTable.Get(next.yardId) : null;
+                text = YardMapModel.NextYardButtonText(next, status, rule != null ? rule.unlockCost : 0);
+            }
+            UIViewUtil.SetVisible(NextYardButton, text != null);
+            if (text != null) NextYardButton.text = text;
+        }
+
+        void GoToNextYard()
+        {
+            var flow = LevelFlow.Instance;
+            if (flow == null) return;
+            var (next, status) = flow.NextYard;
+            if (next == null) return;
+            if (status == YardStatus.Purchasable && !TryOpenYard(next.yardId, next.displayName))
+            {
+                Flow.OpenYardMap();
+                return;
+            }
+            GameEvents.RaiseYardTravelRequested(next.yardId);
+        }
 
         static string LookupToolName(string toolId)
         {

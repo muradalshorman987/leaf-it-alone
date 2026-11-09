@@ -84,5 +84,13 @@ namespace FallenYard.UI
             return string.Join("/", bindings.Label(GameAction.Tool1), bindings.Label(GameAction.Tool2),
                 bindings.Label(GameAction.Tool3), bindings.Label(GameAction.Tool4));
         }
+
+        /// <summary>Toast shown on arriving in a yard: Corner Lot. A note from The Okafor twins: "..."</summary>
+        public static string ArrivalNote(string yardName, string neighbour, string note)
+        {
+            if (string.IsNullOrEmpty(note)) return string.IsNullOrEmpty(yardName) ? null : yardName;
+            string who = string.IsNullOrEmpty(neighbour) ? "the neighbour" : neighbour;
+            return string.IsNullOrEmpty(yardName) ? $"A note from {who}: \"{note}\"" : $"{yardName}. A note from {who}: \"{note}\"";
+        }
     }
 }
